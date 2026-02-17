@@ -6,6 +6,7 @@ interface CvContextType {
   rawText: string;
   setRawText: (text: string) => void;
   cvData: CvData | null;
+  setCvDataDirectly: (data: CvData) => void;
   selectedTemplate: TemplateName;
   setSelectedTemplate: (t: TemplateName) => void;
   profileName: string;
@@ -51,6 +52,11 @@ export function CvProvider({ children }: { children: ReactNode }) {
     }, 400);
   };
 
+  const setCvDataDirectly = (data: CvData) => {
+    setCvData(data);
+    setHasGenerated(true);
+  };
+
   const reset = () => {
     setRawText('');
     setCvData(null);
@@ -63,7 +69,7 @@ export function CvProvider({ children }: { children: ReactNode }) {
 
   return (
     <CvContext.Provider value={{
-      rawText, setRawText, cvData, selectedTemplate, setSelectedTemplate,
+      rawText, setRawText, cvData, setCvDataDirectly, selectedTemplate, setSelectedTemplate,
       profileName, setProfileName,
       isGenerating, generate, reset, hasGenerated,
     }}>
