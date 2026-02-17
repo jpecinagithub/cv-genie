@@ -10,7 +10,7 @@
 - Se implementó sesión de 30 minutos al entrar en `/form`.
 - Se añadió contador visible `mm:ss` en la cabecera del formulario.
 - El contador entra en estado de alerta cuando quedan 5 minutos.
-- La sesión se reinicia al entrar en la página de formulario.
+- La sesión ya no se reinicia al recargar/entrar si sigue activa (comportamiento idempotente).
 - Al expirar la sesión:
   - se limpia estado y datos `cv-*` de `localStorage`,
   - se emite evento `cv-session-expired`,
@@ -29,6 +29,11 @@
 - Se mejoró la inicialización del formulario para parsear `localStorage` una sola vez (menos sobrecarga).
 - Se añadieron helpers seguros de almacenamiento en contexto (`safeSetItem`, `safeRemoveItem`) para evitar roturas por cuota o errores de storage.
 - Se añadió manejo de error de cuota al guardar formulario, con toast de aviso.
+- Se endureció lectura de `localStorage` en contexto:
+  - `cv-data` con parse seguro y limpieza automática si JSON inválido.
+  - validación estricta de `cv-template` contra templates permitidas.
+  - validación estricta de `cv-section-language` (`es|en`).
+  - lectura segura con `safeGetItem` para evitar crashes por restricciones del navegador.
 
 ## 5. Campo de identidad y datos personales
 - Se añadió campo `Profesión` separado del nombre en el formulario.
@@ -54,7 +59,8 @@
   - convierte comas en saltos de línea,
   - guarda y genera una skill por línea.
 - Nivel de idioma cambió a selector cerrado con opciones:
-  - `Basic`, `Intermediate`, `Advance`, `Fluent`, `Native`.
+  - `Basic`, `Intermediate`, `Advanced`, `Fluent`, `Native`.
+- Se actualizó CTA principal a `Generar CV` (antes `Generar 5 CVs`).
 
 ## 8. Lógica de experiencia/formación
 - Formato de experiencia actualizado: `Cargo | Empresa (Periodo)`.
@@ -92,6 +98,9 @@
   - profesión,
   - traducción de secciones,
   - formato de negritas en experiencia/formación.
+- Se robusteció descarga DOCX:
+  - ancla temporal insertada en DOM para mayor compatibilidad,
+  - `URL.revokeObjectURL` diferido (evita cortes prematuros en algunos navegadores).
 - PDF se mantuvo estable y cubierto por tests.
 
 ## 13. Calidad técnica
@@ -119,3 +128,18 @@
 ## 16. Documentación
 - Se creó `requerimietnos.md` con requerimientos técnicos/funcionales.
 - Se añadieron mejoras progresivas según feedback de UI y flujo.
+
+## 17. Ajustes recientes de UX e idioma
+- Sincronización automática de idioma:
+  - al cambiar idioma de secciones, se actualiza también `cvData.sectionLanguage` sin necesidad de regenerar.
+  - preview y exportaciones reflejan el cambio inmediatamente.
+- Limpieza de textos visibles:
+  - correcciones de tildes y ortografía (`Sesión`, `Títulos`, `español`).
+  - homogeneización de copys al español en cabecera y subtítulos principales.
+- Estado actual de calidad:
+  - `lint` en verde.
+  - suite de tests en verde (`10/10`).
+
+## 18. Fallback defensivo de plantillas
+- Se añadió fallback en `TemplateRenderer` para evitar crash si llega un `template` inválido en runtime.
+- Comportamiento: si la plantilla no existe en `TEMPLATE_MAP`, se renderiza automáticamente `minimal`.

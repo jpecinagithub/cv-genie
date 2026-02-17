@@ -134,6 +134,8 @@ export async function exportToDocx(data: CvData, filename: string) {
   const a = document.createElement('a');
   a.href = url;
   a.download = `${filename}.docx`;
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(url);
+  a.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

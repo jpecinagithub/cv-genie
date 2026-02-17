@@ -47,7 +47,7 @@ const FormPage = () => {
               <h1 className="text-xl font-bold tracking-tight">
                 CV<span className="font-black text-[#0056b2]">Craft</span>
               </h1>
-              <p className="text-[11px] text-slate-500">Professional CV Builder</p>
+              <p className="text-[11px] text-slate-500">Generador profesional de CV</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -56,7 +56,7 @@ const FormPage = () => {
                 ? 'border-red-300 bg-red-50 text-red-700'
                 : 'border-slate-200 bg-slate-50 text-slate-700'
             }`}>
-              Sesion activa: <span className="ml-1 font-mono font-semibold">{minutes}:{seconds}</span>
+              Sesión activa: <span className="ml-1 font-mono font-semibold">{minutes}:{seconds}</span>
             </div>
             <button
               type="button"
@@ -75,8 +75,8 @@ const FormPage = () => {
             <div className="mb-8">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <h2 className="text-2xl font-bold text-slate-900">Build your professional CV</h2>
-                  <p className="mt-1 text-sm text-slate-500">Fill in the sections below to update your live preview.</p>
+                  <h2 className="text-2xl font-bold text-slate-900">Crea tu CV profesional</h2>
+                  <p className="mt-1 text-sm text-slate-500">Completa las secciones para actualizar la vista previa en tiempo real.</p>
                 </div>
                 <Button
                   type="button"

@@ -34,6 +34,7 @@ describe("exportToDocx", () => {
   });
 
   it("creates and downloads a DOCX with translated English titles", async () => {
+    vi.useFakeTimers();
     Object.defineProperty(URL, "createObjectURL", {
       writable: true,
       value: vi.fn(),
@@ -62,6 +63,7 @@ describe("exportToDocx", () => {
     };
 
     await exportToDocx(data, "jane-cv");
+    vi.runAllTimers();
 
     expect(docxMocks.PackerToBlob).toHaveBeenCalledTimes(1);
     expect(createObjectURLSpy).toHaveBeenCalled();
@@ -72,5 +74,7 @@ describe("exportToDocx", () => {
     expect(textRunArgs).toContain("Summary");
     expect(textRunArgs).toContain("Experience");
     expect(textRunArgs).toContain("Education");
+
+    vi.useRealTimers();
   });
 });

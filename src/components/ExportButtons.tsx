@@ -78,8 +78,8 @@ export function ExportButtons({ cvRef }: Props) {
           <SelectValue placeholder="Idioma" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="es">Titulos en Espanol</SelectItem>
-          <SelectItem value="en">Titles in English</SelectItem>
+          <SelectItem value="es">Títulos en español</SelectItem>
+          <SelectItem value="en">Títulos en inglés</SelectItem>
         </SelectContent>
       </Select>
       <Button variant="outline" size="sm" className="h-9 border-slate-300 bg-white font-semibold" onClick={handlePdf} disabled={!!exporting}>

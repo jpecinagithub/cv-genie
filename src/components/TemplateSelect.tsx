@@ -31,11 +31,11 @@ export function TemplateSelect() {
       <div className="mt-2">
         <Select value={sectionLanguage} onValueChange={(value) => setSectionLanguage(value as 'es' | 'en')}>
           <SelectTrigger className="h-9 w-full border-primary/40 bg-background text-sm focus:ring-2 focus:ring-primary/30">
-            <SelectValue placeholder="Idioma de titulos" />
+            <SelectValue placeholder="Idioma de títulos" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="es">Titulos en Espanol</SelectItem>
-            <SelectItem value="en">Titles in English</SelectItem>
+            <SelectItem value="es">Títulos en español</SelectItem>
+            <SelectItem value="en">Títulos en inglés</SelectItem>
           </SelectContent>
         </Select>
       </div>

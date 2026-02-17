@@ -33,7 +33,7 @@ const TEMPLATE_MAP: Record<TemplateName, React.ComponentType<{ data: CvData }>> 
 
 export const TemplateRenderer = forwardRef<HTMLDivElement, Props>(
   ({ data, template }, ref) => {
-    const Component = TEMPLATE_MAP[template];
+    const Component = TEMPLATE_MAP[template] ?? MinimalTemplate;
     return (
       <div ref={ref}>
         <Component data={data} />

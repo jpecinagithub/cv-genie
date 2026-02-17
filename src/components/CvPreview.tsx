@@ -33,7 +33,7 @@ export function CvPreview() {
           <h2 className="text-xl font-semibold text-foreground mb-2">Vista previa del CV</h2>
           <p className="text-muted-foreground max-w-md">
             Completa el formulario del panel izquierdo y haz clic en
-            &quot;Generar 5 CVs&quot; para ver el resultado aquí.
+            &quot;Generar CV&quot; para ver el resultado aquí.
           </p>
         </div>
       </div>

@@ -1,10 +1,19 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { CvData, TemplateName } from '@/types/cv';
+import { CvData, TemplateName, TEMPLATES } from '@/types/cv';
 import { toast } from 'sonner';
 /* eslint-disable react-refresh/only-export-components */
 
 const SESSION_DURATION_MS = 30 * 60 * 1000;
 const SESSION_KEY = 'cv-session-expires-at';
+const TEMPLATE_SET = new Set<TemplateName>(TEMPLATES.map((t) => t.id));
+
+function safeGetItem(key: string) {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
 
 function safeSetItem(key: string, value: string) {
   try {
@@ -20,6 +29,33 @@ function safeRemoveItem(key: string) {
   } catch {
     // ignore storage errors
   }
+}
+
+function readStoredCvData(): CvData | null {
+  const saved = safeGetItem('cv-data');
+  if (!saved) return null;
+  try {
+    return JSON.parse(saved) as CvData;
+  } catch {
+    safeRemoveItem('cv-data');
+    return null;
+  }
+}
+
+function readStoredTemplate(): TemplateName {
+  const saved = safeGetItem('cv-template');
+  if (saved && TEMPLATE_SET.has(saved as TemplateName)) {
+    return saved as TemplateName;
+  }
+  if (saved) safeRemoveItem('cv-template');
+  return 'minimal';
+}
+
+function readStoredSectionLanguage(): 'es' | 'en' {
+  const saved = safeGetItem('cv-section-language');
+  if (saved === 'es' || saved === 'en') return saved;
+  if (saved) safeRemoveItem('cv-section-language');
+  return 'es';
 }
 
 interface CvContextType {
@@ -40,27 +76,25 @@ interface CvContextType {
 const CvContext = createContext<CvContextType | null>(null);
 
 export function CvProvider({ children }: { children: ReactNode }) {
-  const [cvData, setCvData] = useState<CvData | null>(() => {
-    const saved = localStorage.getItem('cv-data');
-    return saved ? JSON.parse(saved) : null;
-  });
-  const [selectedTemplate, setSelectedTemplate] = useState<TemplateName>(
-    () => (localStorage.getItem('cv-template') as TemplateName) || 'minimal'
-  );
-  const [profileName, setProfileName] = useState(() => localStorage.getItem('cv-profile') || '');
-  const [sectionLanguage, setSectionLanguage] = useState<'es' | 'en'>(
-    () => (localStorage.getItem('cv-section-language') as 'es' | 'en') || 'es'
-  );
-  const [hasGenerated, setHasGenerated] = useState(() => !!localStorage.getItem('cv-data'));
+  const [cvData, setCvData] = useState<CvData | null>(readStoredCvData);
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateName>(readStoredTemplate);
+  const [profileName, setProfileName] = useState(() => safeGetItem('cv-profile') || '');
+  const [sectionLanguage, setSectionLanguage] = useState<'es' | 'en'>(readStoredSectionLanguage);
+  const [hasGenerated, setHasGenerated] = useState(() => !!safeGetItem('cv-data'));
   const [sessionExpiresAt, setSessionExpiresAt] = useState<number | null>(() => {
-    const saved = localStorage.getItem(SESSION_KEY);
+    const saved = safeGetItem(SESSION_KEY);
     if (!saved) return null;
     const parsed = Number(saved);
     return Number.isFinite(parsed) ? parsed : null;
   });
 
   const clearCvStorage = () => {
-    const keys = Object.keys(localStorage).filter((k) => k.startsWith('cv-'));
+    let keys: string[] = [];
+    try {
+      keys = Object.keys(localStorage).filter((k) => k.startsWith('cv-'));
+    } catch {
+      return;
+    }
     for (const key of keys) safeRemoveItem(key);
   };
 
@@ -74,9 +108,10 @@ export function CvProvider({ children }: { children: ReactNode }) {
   };
 
   const startSession = useCallback(() => {
-    const expiresAt = Date.now() + SESSION_DURATION_MS;
-    setSessionExpiresAt(expiresAt);
-    safeSetItem(SESSION_KEY, String(expiresAt));
+    setSessionExpiresAt((prev) => {
+      if (prev && prev > Date.now()) return prev;
+      return Date.now() + SESSION_DURATION_MS;
+    });
   }, []);
 
   useEffect(() => { safeSetItem('cv-template', selectedTemplate); }, [selectedTemplate]);
@@ -93,6 +128,12 @@ export function CvProvider({ children }: { children: ReactNode }) {
     if (cvData) safeSetItem('cv-data', JSON.stringify(cvData));
     else safeRemoveItem('cv-data');
   }, [cvData]);
+  useEffect(() => {
+    setCvData((prev) => {
+      if (!prev || prev.sectionLanguage === sectionLanguage) return prev;
+      return { ...prev, sectionLanguage };
+    });
+  }, [sectionLanguage]);
   useEffect(() => {
     if (!sessionExpiresAt) return;
 

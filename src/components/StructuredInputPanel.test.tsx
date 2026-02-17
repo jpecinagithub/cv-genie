@@ -47,7 +47,7 @@ describe("StructuredInputPanel", () => {
       target: { value: "2020 - Present" },
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Generar 5 CVs" }));
+    fireEvent.click(screen.getByRole("button", { name: "Generar CV" }));
 
     expect(mockSetCvDataDirectly).toHaveBeenCalledTimes(1);
     const payload = mockSetCvDataDirectly.mock.calls[0][0];

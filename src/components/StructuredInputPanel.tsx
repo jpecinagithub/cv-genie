@@ -548,7 +548,7 @@ export function StructuredInputPanel() {
                       <SelectContent>
                         <SelectItem value="Basic">Basic</SelectItem>
                         <SelectItem value="Intermediate">Intermediate</SelectItem>
-                        <SelectItem value="Advance">Advance</SelectItem>
+                        <SelectItem value="Advanced">Advanced</SelectItem>
                         <SelectItem value="Fluent">Fluent</SelectItem>
                         <SelectItem value="Native">Native</SelectItem>
                       </SelectContent>
@@ -571,7 +571,7 @@ export function StructuredInputPanel() {
         <div className="mt-4 pb-1 pt-2 flex flex-col gap-2 border-t">
           <Button onClick={handleGenerate} disabled={!hasContent} className="w-full">
             <Sparkles className="h-4 w-4 mr-2" />
-            Generar 5 CVs
+            Generar CV
           </Button>
           <Button
             variant="outline"
