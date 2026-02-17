@@ -1,9 +1,27 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { CvData, TemplateName } from '@/types/cv';
 import { parseText } from '@/lib/parser';
+import { toast } from 'sonner';
+/* eslint-disable react-refresh/only-export-components */
 
 const SESSION_DURATION_MS = 30 * 60 * 1000;
 const SESSION_KEY = 'cv-session-expires-at';
+
+function safeSetItem(key: string, value: string) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // ignore quota/storage errors to avoid breaking app flow
+  }
+}
+
+function safeRemoveItem(key: string) {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // ignore storage errors
+  }
+}
 
 interface CvContextType {
   rawText: string;
@@ -50,7 +68,7 @@ export function CvProvider({ children }: { children: ReactNode }) {
 
   const clearCvStorage = () => {
     const keys = Object.keys(localStorage).filter((k) => k.startsWith('cv-'));
-    for (const key of keys) localStorage.removeItem(key);
+    for (const key of keys) safeRemoveItem(key);
   };
 
   const clearAllState = () => {
@@ -66,44 +84,68 @@ export function CvProvider({ children }: { children: ReactNode }) {
   const startSession = useCallback(() => {
     const expiresAt = Date.now() + SESSION_DURATION_MS;
     setSessionExpiresAt(expiresAt);
-    localStorage.setItem(SESSION_KEY, String(expiresAt));
+    safeSetItem(SESSION_KEY, String(expiresAt));
   }, []);
 
-  useEffect(() => { localStorage.setItem('cv-raw-text', rawText); }, [rawText]);
-  useEffect(() => { localStorage.setItem('cv-template', selectedTemplate); }, [selectedTemplate]);
-  useEffect(() => { localStorage.setItem('cv-profile', profileName); }, [profileName]);
-  useEffect(() => { localStorage.setItem('cv-section-language', sectionLanguage); }, [sectionLanguage]);
+  useEffect(() => { safeSetItem('cv-raw-text', rawText); }, [rawText]);
+  useEffect(() => { safeSetItem('cv-template', selectedTemplate); }, [selectedTemplate]);
+  useEffect(() => { safeSetItem('cv-profile', profileName); }, [profileName]);
+  useEffect(() => { safeSetItem('cv-section-language', sectionLanguage); }, [sectionLanguage]);
   useEffect(() => {
     if (sessionExpiresAt === null) {
-      localStorage.removeItem(SESSION_KEY);
+      safeRemoveItem(SESSION_KEY);
     } else {
-      localStorage.setItem(SESSION_KEY, String(sessionExpiresAt));
+      safeSetItem(SESSION_KEY, String(sessionExpiresAt));
     }
   }, [sessionExpiresAt]);
   useEffect(() => {
-    if (cvData) localStorage.setItem('cv-data', JSON.stringify(cvData));
-    else localStorage.removeItem('cv-data');
+    if (cvData) safeSetItem('cv-data', JSON.stringify(cvData));
+    else safeRemoveItem('cv-data');
   }, [cvData]);
   useEffect(() => {
     if (!sessionExpiresAt) return;
 
     const msRemaining = sessionExpiresAt - Date.now();
-    if (msRemaining <= 0) {
+    const warnFiveMinutesMs = 5 * 60 * 1000;
+    const warnOneMinuteMs = 60 * 1000;
+
+    const expireSession = () => {
       clearCvStorage();
       clearAllState();
       window.dispatchEvent(new Event('cv-session-expired'));
-      alert('Tu sesion de 30 minutos ha finalizado. Los datos locales se han borrado.');
+      toast.error('Tu sesion ha finalizado. Los datos locales se han borrado.');
+    };
+
+    if (msRemaining <= 0) {
+      expireSession();
       return;
     }
 
-    const timer = window.setTimeout(() => {
-      clearCvStorage();
-      clearAllState();
-      window.dispatchEvent(new Event('cv-session-expired'));
-      alert('Tu sesion de 30 minutos ha finalizado. Los datos locales se han borrado.');
-    }, msRemaining);
+    const timers: number[] = [];
 
-    return () => window.clearTimeout(timer);
+    if (msRemaining <= warnFiveMinutesMs) {
+      toast.warning('Tu sesion vence en menos de 5 minutos.');
+    } else {
+      timers.push(window.setTimeout(() => {
+        toast.warning('Tu sesion vence en 5 minutos.');
+      }, msRemaining - warnFiveMinutesMs));
+    }
+
+    if (msRemaining <= warnOneMinuteMs) {
+      toast.warning('Tu sesion vence en menos de 1 minuto.');
+    } else {
+      timers.push(window.setTimeout(() => {
+        toast.warning('Tu sesion vence en 1 minuto.');
+      }, msRemaining - warnOneMinuteMs));
+    }
+
+    timers.push(window.setTimeout(() => {
+      expireSession();
+    }, msRemaining));
+
+    return () => {
+      for (const t of timers) window.clearTimeout(t);
+    };
   }, [sessionExpiresAt]);
 
   const generate = () => {

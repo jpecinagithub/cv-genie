@@ -1,4 +1,4 @@
-import { ChangeEvent, useEffect, useState } from 'react';
+import { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useCv } from '@/context/CvContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sparkles, Plus, X, RotateCcw } from 'lucide-react';
 import { CvData, CvSection } from '@/types/cv';
+import { toast } from 'sonner';
 import {
   Accordion,
   AccordionContent,
@@ -52,102 +53,108 @@ const EMPTY_EXPERIENCE: () => ExperienceEntry = () => ({ id: generateId(), title
 const EMPTY_EDUCATION: () => EducationEntry = () => ({ id: generateId(), degree: '', institution: '', year: '' });
 const EMPTY_LANGUAGE: () => LanguageEntry = () => ({ id: generateId(), language: '', level: '' });
 const STRUCTURED_STORAGE_KEY = 'cv-structured-form';
+const MAX_IMAGE_BYTES = 2 * 1024 * 1024; // 2MB
+const MAX_IMAGE_DIMENSION = 1024;
+const MAX_IMAGE_DATAURL_CHARS = 2_000_000;
+
+interface StructuredState {
+  contact?: ContactInfo;
+  summary?: string;
+  experiences?: ExperienceEntry[];
+  education?: EducationEntry[];
+  skills?: string;
+  languages?: LanguageEntry[];
+  profession?: string;
+  photoUrl?: string;
+}
+
+function readStructuredState(): StructuredState {
+  const saved = localStorage.getItem(STRUCTURED_STORAGE_KEY);
+  if (!saved) return {};
+  try {
+    return JSON.parse(saved) as StructuredState;
+  } catch {
+    return {};
+  }
+}
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') resolve(reader.result);
+      else reject(new Error('No se pudo leer la imagen'));
+    };
+    reader.onerror = () => reject(new Error('No se pudo leer la imagen'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function optimizeImageDataUrl(dataUrl: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, MAX_IMAGE_DIMENSION / Math.max(img.width, img.height));
+      const targetW = Math.max(1, Math.round(img.width * scale));
+      const targetH = Math.max(1, Math.round(img.height * scale));
+
+      const canvas = document.createElement('canvas');
+      canvas.width = targetW;
+      canvas.height = targetH;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        resolve(dataUrl);
+        return;
+      }
+
+      ctx.drawImage(img, 0, 0, targetW, targetH);
+      const optimized = canvas.toDataURL('image/jpeg', 0.82);
+      resolve(optimized.length < dataUrl.length ? optimized : dataUrl);
+    };
+    img.onerror = () => reject(new Error('No se pudo procesar la imagen'));
+    img.src = dataUrl;
+  });
+}
 
 export function StructuredInputPanel() {
   const { reset, isGenerating, hasGenerated, profileName, setProfileName, setCvDataDirectly, sectionLanguage } = useCv();
+  const initialState = useMemo(() => readStructuredState(), []);
+  const storageWarningShownRef = useRef(false);
 
-  const [contact, setContact] = useState<ContactInfo>(() => {
-    const saved = localStorage.getItem(STRUCTURED_STORAGE_KEY);
-    if (!saved) return { ...EMPTY_CONTACT };
-    try {
-      const parsed = JSON.parse(saved);
-      return parsed.contact ?? { ...EMPTY_CONTACT };
-    } catch {
-      return { ...EMPTY_CONTACT };
-    }
-  });
-  const [summary, setSummary] = useState(() => {
-    const saved = localStorage.getItem(STRUCTURED_STORAGE_KEY);
-    if (!saved) return '';
-    try {
-      const parsed = JSON.parse(saved);
-      return parsed.summary ?? '';
-    } catch {
-      return '';
-    }
-  });
-  const [experiences, setExperiences] = useState<ExperienceEntry[]>(() => {
-    const saved = localStorage.getItem(STRUCTURED_STORAGE_KEY);
-    if (!saved) return [EMPTY_EXPERIENCE()];
-    try {
-      const parsed = JSON.parse(saved);
-      return parsed.experiences?.length ? parsed.experiences : [EMPTY_EXPERIENCE()];
-    } catch {
-      return [EMPTY_EXPERIENCE()];
-    }
-  });
-  const [education, setEducation] = useState<EducationEntry[]>(() => {
-    const saved = localStorage.getItem(STRUCTURED_STORAGE_KEY);
-    if (!saved) return [EMPTY_EDUCATION()];
-    try {
-      const parsed = JSON.parse(saved);
-      return parsed.education?.length ? parsed.education : [EMPTY_EDUCATION()];
-    } catch {
-      return [EMPTY_EDUCATION()];
-    }
-  });
-  const [skills, setSkills] = useState(() => {
-    const saved = localStorage.getItem(STRUCTURED_STORAGE_KEY);
-    if (!saved) return '';
-    try {
-      const parsed = JSON.parse(saved);
-      return parsed.skills ?? '';
-    } catch {
-      return '';
-    }
-  });
-  const [languages, setLanguages] = useState<LanguageEntry[]>(() => {
-    const saved = localStorage.getItem(STRUCTURED_STORAGE_KEY);
-    if (!saved) return [EMPTY_LANGUAGE()];
-    try {
-      const parsed = JSON.parse(saved);
-      return parsed.languages?.length ? parsed.languages : [EMPTY_LANGUAGE()];
-    } catch {
-      return [EMPTY_LANGUAGE()];
-    }
-  });
-  const [profession, setProfession] = useState(() => {
-    const saved = localStorage.getItem(STRUCTURED_STORAGE_KEY);
-    if (!saved) return '';
-    try {
-      const parsed = JSON.parse(saved);
-      return parsed.profession ?? '';
-    } catch {
-      return '';
-    }
-  });
-  const [photoUrl, setPhotoUrl] = useState<string>(() => {
-    const saved = localStorage.getItem(STRUCTURED_STORAGE_KEY);
-    if (!saved) return '';
-    try {
-      const parsed = JSON.parse(saved);
-      return parsed.photoUrl ?? '';
-    } catch {
-      return '';
-    }
-  });
+  const [contact, setContact] = useState<ContactInfo>(initialState.contact ?? { ...EMPTY_CONTACT });
+  const [summary, setSummary] = useState(initialState.summary ?? '');
+  const [experiences, setExperiences] = useState<ExperienceEntry[]>(
+    initialState.experiences?.length ? initialState.experiences : [EMPTY_EXPERIENCE()]
+  );
+  const [education, setEducation] = useState<EducationEntry[]>(
+    initialState.education?.length ? initialState.education : [EMPTY_EDUCATION()]
+  );
+  const [skills, setSkills] = useState(initialState.skills ?? '');
+  const [languages, setLanguages] = useState<LanguageEntry[]>(
+    initialState.languages?.length ? initialState.languages : [EMPTY_LANGUAGE()]
+  );
+  const [profession, setProfession] = useState(initialState.profession ?? '');
+  const [photoUrl, setPhotoUrl] = useState<string>(initialState.photoUrl ?? '');
 
   useEffect(() => {
-    localStorage.setItem(STRUCTURED_STORAGE_KEY, JSON.stringify({
-      contact,
-      profession,
-      photoUrl,
-      summary,
-      experiences,
-      education,
-      skills,
-      languages,
-    }));
+    try {
+      localStorage.setItem(STRUCTURED_STORAGE_KEY, JSON.stringify({
+        contact,
+        profession,
+        photoUrl,
+        summary,
+        experiences,
+        education,
+        skills,
+        languages,
+      }));
+      storageWarningShownRef.current = false;
+    } catch {
+      if (!storageWarningShownRef.current) {
+        toast.error('No hay espacio suficiente en el navegador para guardar todo el formulario.');
+        storageWarningShownRef.current = true;
+      }
+    }
   }, [contact, profession, photoUrl, summary, experiences, education, skills, languages]);
 
   useEffect(() => {
@@ -197,13 +204,13 @@ export function StructuredInputPanel() {
         if (e.description) line += '\n' + e.description;
         return line;
       });
-    if (expItems.length) sections.push({ title: 'Experiencia', items: expItems });
+    if (expItems.length) sections.push({ key: 'experience', title: 'Experiencia', items: expItems });
 
     // Education
     const eduItems = education
       .filter(e => e.degree || e.institution)
       .map(e => `${e.degree}${e.institution ? ', ' + e.institution : ''}${e.year ? ' (' + e.year + ')' : ''}`);
-    if (eduItems.length) sections.push({ title: 'Educación', items: eduItems });
+    if (eduItems.length) sections.push({ key: 'education', title: 'Educación', items: eduItems });
 
     // Skills
     const skillItems = skills
@@ -211,14 +218,14 @@ export function StructuredInputPanel() {
       .map((s) => s.trim())
       .filter(Boolean);
     if (skillItems.length) {
-      sections.push({ title: 'Habilidades', items: skillItems });
+      sections.push({ key: 'skills', title: 'Habilidades', items: skillItems });
     }
 
     // Languages
     const langItems = languages
       .filter(l => l.language)
       .map(l => `${l.language}${l.level ? ': ' + l.level : ''}`);
-    if (langItems.length) sections.push({ title: 'Idiomas', items: langItems });
+    if (langItems.length) sections.push({ key: 'languages', title: 'Idiomas', items: langItems });
 
     const cvData: CvData = {
       name: profileName || '',
@@ -253,16 +260,34 @@ export function StructuredInputPanel() {
     languages.some(l => l.language) ||
     Object.values(contact).some(v => v);
 
-  const handlePhotoChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith('image/')) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') setPhotoUrl(reader.result);
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
+    if (!file.type.startsWith('image/')) {
+      toast.error('Selecciona un archivo de imagen valido.');
+      e.target.value = '';
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      toast.error('La imagen supera el limite de 2MB.');
+      e.target.value = '';
+      return;
+    }
+
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      const optimized = await optimizeImageDataUrl(dataUrl);
+      if (optimized.length > MAX_IMAGE_DATAURL_CHARS) {
+        toast.error('La imagen sigue siendo grande. Usa una foto mas ligera.');
+        return;
+      }
+      setPhotoUrl(optimized);
+      toast.success('Foto cargada correctamente.');
+    } catch {
+      toast.error('No se pudo procesar la imagen.');
+    } finally {
+      e.target.value = '';
+    }
   };
 
   return (

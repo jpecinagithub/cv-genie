@@ -8,7 +8,25 @@ export interface CvData {
   sections: CvSection[];
 }
 
+export type SectionKey =
+  | 'summary'
+  | 'experience'
+  | 'education'
+  | 'skills'
+  | 'languages'
+  | 'projects'
+  | 'certifications'
+  | 'achievements'
+  | 'references'
+  | 'publications'
+  | 'volunteer'
+  | 'contact'
+  | 'interests'
+  | 'additional'
+  | 'custom';
+
 export interface CvSection {
+  key: SectionKey | string;
   title: string;
   items: string[];
 }

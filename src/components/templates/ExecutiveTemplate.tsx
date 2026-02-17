@@ -1,6 +1,6 @@
 import { CvData } from '@/types/cv';
 import { getContactIcon } from '@/lib/contact-icons';
-import { translateSectionTitle } from '@/lib/section-title';
+import { isSectionKey, translateSectionTitle } from '@/lib/section-title';
 
 interface Props { data: CvData; }
 
@@ -48,15 +48,15 @@ export function ExecutiveTemplate({ data }: Props) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '3mm', marginBottom: '3mm' }}>
             <div style={{ flex: 1, height: '0.3mm', background: '#92764a' }} />
             <h2 style={{ fontSize: '12pt', fontWeight: 600, color: '#1a1a1a', textTransform: 'uppercase', letterSpacing: '2px', whiteSpace: 'nowrap' }}>
-              {translateSectionTitle(section.title, lang)}
+              {translateSectionTitle(section.key || section.title, lang, section.title)}
             </h2>
             <div style={{ flex: 1, height: '0.3mm', background: '#92764a' }} />
           </div>
           {section.items.map((item, j) => {
             const isSubItem = item.startsWith('  ') || item.startsWith('\t');
             const clean = item.replace(/^[-•*]\s*/, '').trim();
-            const isEducation = section.title === 'Educación' || section.title === 'Formación';
-            const isExperience = section.title === 'Experiencia' || section.title === 'Experience';
+            const isEducation = isSectionKey(section, 'education');
+            const isExperience = isSectionKey(section, 'experience');
             const [eduTitle, ...eduRest] = clean.split(',');
             const eduSuffix = eduRest.length ? `,${eduRest.join(',')}` : '';
             const [expHeaderRaw, ...expDetailParts] = clean.split('\n');

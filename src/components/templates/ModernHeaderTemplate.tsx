@@ -1,6 +1,6 @@
 import { CvData } from '@/types/cv';
 import { getContactIcon } from '@/lib/contact-icons';
-import { translateSectionTitle } from '@/lib/section-title';
+import { isSectionKey, translateSectionTitle } from '@/lib/section-title';
 
 interface Props { data: CvData; }
 
@@ -49,13 +49,13 @@ export function ModernHeaderTemplate({ data }: Props) {
               borderBottom: '2px solid #0f766e', paddingBottom: '1.5mm',
               marginBottom: '3mm', textTransform: 'uppercase', letterSpacing: '1px',
             }}>
-              {translateSectionTitle(section.title, lang)}
+              {translateSectionTitle(section.key || section.title, lang, section.title)}
             </h2>
             {section.items.map((item, j) => {
               const isSubItem = item.startsWith('  ') || item.startsWith('\t');
               const clean = item.replace(/^[-•*]\s*/, '').trim();
-              const isEducation = section.title === 'Educación' || section.title === 'Formación';
-              const isExperience = section.title === 'Experiencia' || section.title === 'Experience';
+              const isEducation = isSectionKey(section, 'education');
+              const isExperience = isSectionKey(section, 'experience');
               const [eduTitle, ...eduRest] = clean.split(',');
               const eduSuffix = eduRest.length ? `,${eduRest.join(',')}` : '';
               const [expHeaderRaw, ...expDetailParts] = clean.split('\n');

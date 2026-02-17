@@ -1,36 +1,36 @@
-import { CvData, CvSection } from '@/types/cv';
+import { CvData, CvSection, SectionKey } from '@/types/cv';
 
 const EMAIL_RE = /[\w.-]+@[\w.-]+\.\w+/;
 const PHONE_RE = /(\+?\d[\d\s\-().]{7,})/;
 const URL_RE = /https?:\/\/[^\s]+|linkedin\.com\/\S+|github\.com\/\S+/i;
 
-const SECTION_PATTERNS: [RegExp, string][] = [
-  [/^#{0,3}\s*(resumen|summary|perfil profesional|professional summary|profile|about|sobre m[ií])/i, 'Resumen'],
-  [/^#{0,3}\s*(experiencia|experience|trabajo|work|employment|historial laboral|professional experience)/i, 'Experiencia'],
-  [/^#{0,3}\s*(educaci[oó]n|education|formaci[oó]n|academic|estudios|formación académica)/i, 'Educación'],
-  [/^#{0,3}\s*(habilidades|skills|competencias|tecnolog[ií]as|tech|conocimientos)/i, 'Habilidades'],
-  [/^#{0,3}\s*(idiomas|languages)/i, 'Idiomas'],
-  [/^#{0,3}\s*(proyectos|projects)/i, 'Proyectos'],
-  [/^#{0,3}\s*(certificaciones|certifications|cursos|courses)/i, 'Certificaciones'],
-  [/^#{0,3}\s*(logros|achievements|premios|awards)/i, 'Logros'],
-  [/^#{0,3}\s*(referencias|references)/i, 'Referencias'],
-  [/^#{0,3}\s*(publicaciones|publications)/i, 'Publicaciones'],
-  [/^#{0,3}\s*(voluntariado|volunteer)/i, 'Voluntariado'],
-  [/^#{0,3}\s*(contacto|contact|datos personales|personal info)/i, 'Contacto'],
-  [/^#{0,3}\s*(intereses|interests|hobbies)/i, 'Intereses'],
+const SECTION_PATTERNS: [RegExp, string, SectionKey][] = [
+  [/^#{0,3}\s*(resumen|summary|perfil profesional|professional summary|profile|about|sobre m[ií])/i, 'Resumen', 'summary'],
+  [/^#{0,3}\s*(experiencia|experience|trabajo|work|employment|historial laboral|professional experience)/i, 'Experiencia', 'experience'],
+  [/^#{0,3}\s*(educaci[oó]n|education|formaci[oó]n|academic|estudios|formación académica)/i, 'Educación', 'education'],
+  [/^#{0,3}\s*(habilidades|skills|competencias|tecnolog[ií]as|tech|conocimientos)/i, 'Habilidades', 'skills'],
+  [/^#{0,3}\s*(idiomas|languages)/i, 'Idiomas', 'languages'],
+  [/^#{0,3}\s*(proyectos|projects)/i, 'Proyectos', 'projects'],
+  [/^#{0,3}\s*(certificaciones|certifications|cursos|courses)/i, 'Certificaciones', 'certifications'],
+  [/^#{0,3}\s*(logros|achievements|premios|awards)/i, 'Logros', 'achievements'],
+  [/^#{0,3}\s*(referencias|references)/i, 'Referencias', 'references'],
+  [/^#{0,3}\s*(publicaciones|publications)/i, 'Publicaciones', 'publications'],
+  [/^#{0,3}\s*(voluntariado|volunteer)/i, 'Voluntariado', 'volunteer'],
+  [/^#{0,3}\s*(contacto|contact|datos personales|personal info)/i, 'Contacto', 'contact'],
+  [/^#{0,3}\s*(intereses|interests|hobbies)/i, 'Intereses', 'interests'],
 ];
 
 function isContactInfo(line: string): boolean {
   return EMAIL_RE.test(line) || PHONE_RE.test(line) || URL_RE.test(line);
 }
 
-function detectSectionHeader(line: string): string | null {
+function detectSectionHeader(line: string): { title: string; key: SectionKey } | null {
   const cleaned = line.replace(/[:：\-—]+$/, '').trim();
-  for (const [re, name] of SECTION_PATTERNS) {
-    if (re.test(cleaned)) return name;
+  for (const [re, name, key] of SECTION_PATTERNS) {
+    if (re.test(cleaned)) return { title: name, key };
   }
   if (cleaned.length > 2 && cleaned.length < 40 && cleaned === cleaned.toUpperCase() && !/\d{4}/.test(cleaned)) {
-    return cleaned.charAt(0) + cleaned.slice(1).toLowerCase();
+    return { title: cleaned.charAt(0) + cleaned.slice(1).toLowerCase(), key: 'custom' };
   }
   return null;
 }
@@ -76,7 +76,7 @@ export function parseText(text: string): CvData {
     const header = detectSectionHeader(line);
     if (header) {
       if (currentSection && currentSection.items.length > 0) sections.push(currentSection);
-      currentSection = { title: header, items: [] };
+      currentSection = { key: header.key, title: header.title, items: [] };
     } else if (currentSection) {
       if (line.length > 0) currentSection.items.push(line);
     } else {
@@ -85,7 +85,7 @@ export function parseText(text: string): CvData {
   }
   if (currentSection && currentSection.items.length > 0) sections.push(currentSection);
 
-  const contactSectionIdx = sections.findIndex(s => s.title === 'Contacto');
+  const contactSectionIdx = sections.findIndex(s => s.key === 'contact' || s.title === 'Contacto');
   if (contactSectionIdx !== -1) {
     contactInfo.push(...sections[contactSectionIdx].items);
     sections.splice(contactSectionIdx, 1);
@@ -96,7 +96,7 @@ export function parseText(text: string): CvData {
   }
 
   let summary = summaryLines.join(' ');
-  const summarySectionIdx = sections.findIndex(s => s.title === 'Resumen');
+  const summarySectionIdx = sections.findIndex(s => s.key === 'summary' || s.title === 'Resumen');
   if (summarySectionIdx !== -1) {
     summary = sections[summarySectionIdx].items.join(' ');
     sections.splice(summarySectionIdx, 1);
@@ -115,10 +115,10 @@ function createFallbackStructure(name: string, contactInfo: string[], lines: str
   const otherItems = rest.filter(l => !bulletItems.includes(l) && !yearItems.includes(l) && !commaItems.includes(l));
 
   const sections: CvSection[] = [];
-  if (bulletItems.length) sections.push({ title: 'Experiencia', items: bulletItems });
-  if (yearItems.length) sections.push({ title: 'Educación', items: yearItems });
-  if (commaItems.length) sections.push({ title: 'Habilidades', items: commaItems });
-  if (otherItems.length) sections.push({ title: 'Información Adicional', items: otherItems });
+  if (bulletItems.length) sections.push({ key: 'experience', title: 'Experiencia', items: bulletItems });
+  if (yearItems.length) sections.push({ key: 'education', title: 'Educación', items: yearItems });
+  if (commaItems.length) sections.push({ key: 'skills', title: 'Habilidades', items: commaItems });
+  if (otherItems.length) sections.push({ key: 'additional', title: 'Información Adicional', items: otherItems });
 
   return { name, sectionLanguage: 'es', contactInfo, summary, sections };
 }

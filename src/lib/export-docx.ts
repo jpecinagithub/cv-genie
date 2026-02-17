@@ -1,6 +1,6 @@
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle } from 'docx';
 import { CvData } from '@/types/cv';
-import { getSummaryTitle, translateSectionTitle } from '@/lib/section-title';
+import { getSummaryTitle, isSectionKey, translateSectionTitle } from '@/lib/section-title';
 
 export async function exportToDocx(data: CvData, filename: string) {
   const children: Paragraph[] = [];
@@ -43,7 +43,7 @@ export async function exportToDocx(data: CvData, filename: string) {
 
   for (const section of data.sections) {
     children.push(new Paragraph({
-      children: [new TextRun({ text: translateSectionTitle(section.title, lang), bold: true, size: 24, font: 'Calibri' })],
+      children: [new TextRun({ text: translateSectionTitle(section.key || section.title, lang, section.title), bold: true, size: 24, font: 'Calibri' })],
       heading: HeadingLevel.HEADING_2,
       spacing: { before: 300 },
       border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' } },
@@ -52,8 +52,8 @@ export async function exportToDocx(data: CvData, filename: string) {
     for (const item of section.items) {
       const clean = item.replace(/^[-•*]\s*/, '').trim();
       const isSubItem = item.startsWith('  ') || item.startsWith('\t');
-      const isEducation = section.title === 'Educación' || section.title === 'Formación';
-      const isExperience = section.title === 'Experiencia' || section.title === 'Experience';
+      const isEducation = isSectionKey(section, 'education');
+      const isExperience = isSectionKey(section, 'experience');
       const [eduTitle, ...eduRest] = clean.split(',');
       const eduSuffix = eduRest.length ? `,${eduRest.join(',')}` : '';
       const [expHeaderRaw, ...expDetailParts] = clean.split('\n');
