@@ -1,8 +1,11 @@
 import { CvData } from '@/types/cv';
+import { getContactIcon } from '@/lib/contact-icons';
+import { translateSectionTitle } from '@/lib/section-title';
 
 interface Props { data: CvData; }
 
 export function MinimalTemplate({ data }: Props) {
+  const lang = data.sectionLanguage || 'es';
   return (
     <div style={{
       width: '210mm', minHeight: '297mm', padding: '25mm 30mm',
@@ -14,10 +17,20 @@ export function MinimalTemplate({ data }: Props) {
         <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '28pt', fontWeight: 600, margin: 0, color: '#1a1a2e', letterSpacing: '1px' }}>
           {data.name}
         </h1>
-        {data.contactInfo.length > 0 && (
-          <p style={{ fontSize: '9pt', color: '#666', marginTop: '3mm' }}>
-            {data.contactInfo.join('  ·  ')}
+        {data.profession && (
+          <p style={{ fontSize: '11.5pt', fontWeight: 600, color: '#1f2937', marginTop: '2mm', letterSpacing: '0.5px' }}>
+            {data.profession}
           </p>
+        )}
+        {data.contactInfo.length > 0 && (
+          <div style={{ fontSize: '9pt', color: '#666', marginTop: '3mm' }}>
+            {data.contactInfo.map((c, i) => (
+              <p key={i} style={{ margin: '0.7mm 0', display: 'flex', justifyContent: 'center', gap: '2mm', alignItems: 'center' }}>
+                <span style={{ minWidth: '4mm', textAlign: 'center' }}>{getContactIcon(c)}</span>
+                <span>{c}</span>
+              </p>
+            ))}
+          </div>
         )}
       </div>
 
@@ -37,18 +50,37 @@ export function MinimalTemplate({ data }: Props) {
             borderBottom: '1px solid #ddd', paddingBottom: '2mm', marginBottom: '3mm',
             textTransform: 'uppercase', letterSpacing: '1.5px',
           }}>
-            {section.title}
+            {translateSectionTitle(section.title, lang)}
           </h2>
           {section.items.map((item, j) => {
             const isSubItem = item.startsWith('  ') || item.startsWith('\t');
             const clean = item.replace(/^[-•*]\s*/, '').trim();
+            const isEducation = section.title === 'Educación' || section.title === 'Formación';
+            const isExperience = section.title === 'Experiencia' || section.title === 'Experience';
+            const [eduTitle, ...eduRest] = clean.split(',');
+            const eduSuffix = eduRest.length ? `,${eduRest.join(',')}` : '';
+            const [expHeaderRaw, ...expDetailParts] = clean.split('\n');
+            const expHeader = expHeaderRaw?.trim() || clean;
+            const expDetails = expDetailParts.join(' ').trim();
+            const expMatch = expHeader.match(/^(.*?)(\s*\([^)]*\))?$/);
+            const expMain = expMatch?.[1]?.trim() || expHeader;
+            const expPeriod = expMatch?.[2] || '';
             return (
               <p key={j} style={{
                 margin: '1mm 0', paddingLeft: isSubItem ? '8mm' : '4mm',
                 fontSize: isSubItem ? '9.5pt' : '10.5pt',
                 color: isSubItem ? '#555' : '#2d2d2d',
               }}>
-                {!isSubItem && '— '}{clean}
+                {!isSubItem && '— '}
+                {isEducation ? (
+                  <>
+                    <strong>{eduTitle.trim()}</strong>{eduSuffix}
+                  </>
+                ) : isExperience ? (
+                  <>
+                    <strong>{expMain}</strong>{expPeriod}{expDetails ? ` ${expDetails}` : ''}
+                  </>
+                ) : clean}
               </p>
             );
           })}

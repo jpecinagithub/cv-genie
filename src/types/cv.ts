@@ -1,5 +1,8 @@
 export interface CvData {
   name: string;
+  profession?: string;
+  photoUrl?: string;
+  sectionLanguage?: 'es' | 'en';
   contactInfo: string[];
   summary: string;
   sections: CvSection[];

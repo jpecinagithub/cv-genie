@@ -40,7 +40,7 @@ export function parseText(text: string): CvData {
   const nonEmpty = lines.filter(l => l.length > 0);
 
   if (nonEmpty.length === 0) {
-    return { name: '', contactInfo: [], summary: '', sections: [] };
+    return { name: '', sectionLanguage: 'es', contactInfo: [], summary: '', sections: [] };
   }
 
   let name = '';
@@ -102,7 +102,7 @@ export function parseText(text: string): CvData {
     sections.splice(summarySectionIdx, 1);
   }
 
-  return { name, contactInfo, summary, sections };
+  return { name, sectionLanguage: 'es', contactInfo, summary, sections };
 }
 
 function createFallbackStructure(name: string, contactInfo: string[], lines: string[]): CvData {
@@ -120,5 +120,5 @@ function createFallbackStructure(name: string, contactInfo: string[], lines: str
   if (commaItems.length) sections.push({ title: 'Habilidades', items: commaItems });
   if (otherItems.length) sections.push({ title: 'Información Adicional', items: otherItems });
 
-  return { name, contactInfo, summary, sections };
+  return { name, sectionLanguage: 'es', contactInfo, summary, sections };
 }

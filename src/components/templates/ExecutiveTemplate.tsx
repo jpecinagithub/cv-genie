@@ -1,8 +1,11 @@
 import { CvData } from '@/types/cv';
+import { getContactIcon } from '@/lib/contact-icons';
+import { translateSectionTitle } from '@/lib/section-title';
 
 interface Props { data: CvData; }
 
 export function ExecutiveTemplate({ data }: Props) {
+  const lang = data.sectionLanguage || 'es';
   return (
     <div style={{
       width: '210mm', minHeight: '297mm', padding: '25mm 28mm',
@@ -14,11 +17,21 @@ export function ExecutiveTemplate({ data }: Props) {
         <h1 style={{ fontSize: '30pt', fontWeight: 500, margin: 0, color: '#1a1a1a', letterSpacing: '3px', textTransform: 'uppercase' }}>
           {data.name}
         </h1>
+        {data.profession && (
+          <p style={{ fontFamily: "'Source Sans 3', sans-serif", fontSize: '11.5pt', fontWeight: 600, color: '#4b5563', marginTop: '2mm', letterSpacing: '1px' }}>
+            {data.profession}
+          </p>
+        )}
         <div style={{ width: '30mm', height: '0.5mm', background: '#92764a', margin: '4mm auto' }} />
         {data.contactInfo.length > 0 && (
-          <p style={{ fontFamily: "'Source Sans 3', sans-serif", fontSize: '9pt', color: '#777', letterSpacing: '0.5px' }}>
-            {data.contactInfo.join('   ◆   ')}
-          </p>
+          <div style={{ fontFamily: "'Source Sans 3', sans-serif", fontSize: '9pt', color: '#777', letterSpacing: '0.5px' }}>
+            {data.contactInfo.map((c, i) => (
+              <p key={i} style={{ margin: '0.7mm 0', display: 'flex', justifyContent: 'center', gap: '2mm', alignItems: 'center' }}>
+                <span style={{ minWidth: '4mm', textAlign: 'center' }}>{getContactIcon(c)}</span>
+                <span>{c}</span>
+              </p>
+            ))}
+          </div>
         )}
       </div>
 
@@ -35,13 +48,23 @@ export function ExecutiveTemplate({ data }: Props) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '3mm', marginBottom: '3mm' }}>
             <div style={{ flex: 1, height: '0.3mm', background: '#92764a' }} />
             <h2 style={{ fontSize: '12pt', fontWeight: 600, color: '#1a1a1a', textTransform: 'uppercase', letterSpacing: '2px', whiteSpace: 'nowrap' }}>
-              {section.title}
+              {translateSectionTitle(section.title, lang)}
             </h2>
             <div style={{ flex: 1, height: '0.3mm', background: '#92764a' }} />
           </div>
           {section.items.map((item, j) => {
             const isSubItem = item.startsWith('  ') || item.startsWith('\t');
             const clean = item.replace(/^[-•*]\s*/, '').trim();
+            const isEducation = section.title === 'Educación' || section.title === 'Formación';
+            const isExperience = section.title === 'Experiencia' || section.title === 'Experience';
+            const [eduTitle, ...eduRest] = clean.split(',');
+            const eduSuffix = eduRest.length ? `,${eduRest.join(',')}` : '';
+            const [expHeaderRaw, ...expDetailParts] = clean.split('\n');
+            const expHeader = expHeaderRaw?.trim() || clean;
+            const expDetails = expDetailParts.join(' ').trim();
+            const expMatch = expHeader.match(/^(.*?)(\s*\([^)]*\))?$/);
+            const expMain = expMatch?.[1]?.trim() || expHeader;
+            const expPeriod = expMatch?.[2] || '';
             return (
               <p key={j} style={{
                 fontFamily: "'Source Sans 3', sans-serif",
@@ -49,7 +72,16 @@ export function ExecutiveTemplate({ data }: Props) {
                 fontSize: isSubItem ? '9.5pt' : '10.5pt',
                 color: isSubItem ? '#666' : '#333',
               }}>
-                {!isSubItem && '◇ '}{clean}
+                {!isSubItem && '◇ '}
+                {isEducation ? (
+                  <>
+                    <strong>{eduTitle.trim()}</strong>{eduSuffix}
+                  </>
+                ) : isExperience ? (
+                  <>
+                    <strong>{expMain}</strong>{expPeriod}{expDetails ? ` ${expDetails}` : ''}
+                  </>
+                ) : clean}
               </p>
             );
           })}

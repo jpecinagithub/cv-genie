@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { ChangeEvent, useEffect, useState } from 'react';
 import { useCv } from '@/context/CvContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sparkles, Plus, X, RotateCcw } from 'lucide-react';
 import { CvData, CvSection } from '@/types/cv';
 import {
@@ -50,16 +51,119 @@ const EMPTY_CONTACT: ContactInfo = { email: '', phone: '', linkedin: '', github:
 const EMPTY_EXPERIENCE: () => ExperienceEntry = () => ({ id: generateId(), title: '', company: '', period: '', description: '' });
 const EMPTY_EDUCATION: () => EducationEntry = () => ({ id: generateId(), degree: '', institution: '', year: '' });
 const EMPTY_LANGUAGE: () => LanguageEntry = () => ({ id: generateId(), language: '', level: '' });
+const STRUCTURED_STORAGE_KEY = 'cv-structured-form';
 
 export function StructuredInputPanel() {
-  const { setRawText, generate, reset, isGenerating, hasGenerated, profileName, setProfileName, setCvDataDirectly } = useCv();
+  const { reset, isGenerating, hasGenerated, profileName, setProfileName, setCvDataDirectly, sectionLanguage } = useCv();
 
-  const [contact, setContact] = useState<ContactInfo>({ ...EMPTY_CONTACT });
-  const [summary, setSummary] = useState('');
-  const [experiences, setExperiences] = useState<ExperienceEntry[]>([EMPTY_EXPERIENCE()]);
-  const [education, setEducation] = useState<EducationEntry[]>([EMPTY_EDUCATION()]);
-  const [skills, setSkills] = useState('');
-  const [languages, setLanguages] = useState<LanguageEntry[]>([EMPTY_LANGUAGE()]);
+  const [contact, setContact] = useState<ContactInfo>(() => {
+    const saved = localStorage.getItem(STRUCTURED_STORAGE_KEY);
+    if (!saved) return { ...EMPTY_CONTACT };
+    try {
+      const parsed = JSON.parse(saved);
+      return parsed.contact ?? { ...EMPTY_CONTACT };
+    } catch {
+      return { ...EMPTY_CONTACT };
+    }
+  });
+  const [summary, setSummary] = useState(() => {
+    const saved = localStorage.getItem(STRUCTURED_STORAGE_KEY);
+    if (!saved) return '';
+    try {
+      const parsed = JSON.parse(saved);
+      return parsed.summary ?? '';
+    } catch {
+      return '';
+    }
+  });
+  const [experiences, setExperiences] = useState<ExperienceEntry[]>(() => {
+    const saved = localStorage.getItem(STRUCTURED_STORAGE_KEY);
+    if (!saved) return [EMPTY_EXPERIENCE()];
+    try {
+      const parsed = JSON.parse(saved);
+      return parsed.experiences?.length ? parsed.experiences : [EMPTY_EXPERIENCE()];
+    } catch {
+      return [EMPTY_EXPERIENCE()];
+    }
+  });
+  const [education, setEducation] = useState<EducationEntry[]>(() => {
+    const saved = localStorage.getItem(STRUCTURED_STORAGE_KEY);
+    if (!saved) return [EMPTY_EDUCATION()];
+    try {
+      const parsed = JSON.parse(saved);
+      return parsed.education?.length ? parsed.education : [EMPTY_EDUCATION()];
+    } catch {
+      return [EMPTY_EDUCATION()];
+    }
+  });
+  const [skills, setSkills] = useState(() => {
+    const saved = localStorage.getItem(STRUCTURED_STORAGE_KEY);
+    if (!saved) return '';
+    try {
+      const parsed = JSON.parse(saved);
+      return parsed.skills ?? '';
+    } catch {
+      return '';
+    }
+  });
+  const [languages, setLanguages] = useState<LanguageEntry[]>(() => {
+    const saved = localStorage.getItem(STRUCTURED_STORAGE_KEY);
+    if (!saved) return [EMPTY_LANGUAGE()];
+    try {
+      const parsed = JSON.parse(saved);
+      return parsed.languages?.length ? parsed.languages : [EMPTY_LANGUAGE()];
+    } catch {
+      return [EMPTY_LANGUAGE()];
+    }
+  });
+  const [profession, setProfession] = useState(() => {
+    const saved = localStorage.getItem(STRUCTURED_STORAGE_KEY);
+    if (!saved) return '';
+    try {
+      const parsed = JSON.parse(saved);
+      return parsed.profession ?? '';
+    } catch {
+      return '';
+    }
+  });
+  const [photoUrl, setPhotoUrl] = useState<string>(() => {
+    const saved = localStorage.getItem(STRUCTURED_STORAGE_KEY);
+    if (!saved) return '';
+    try {
+      const parsed = JSON.parse(saved);
+      return parsed.photoUrl ?? '';
+    } catch {
+      return '';
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem(STRUCTURED_STORAGE_KEY, JSON.stringify({
+      contact,
+      profession,
+      photoUrl,
+      summary,
+      experiences,
+      education,
+      skills,
+      languages,
+    }));
+  }, [contact, profession, photoUrl, summary, experiences, education, skills, languages]);
+
+  useEffect(() => {
+    const onSessionExpired = () => {
+      setContact({ ...EMPTY_CONTACT });
+      setProfession('');
+      setPhotoUrl('');
+      setSummary('');
+      setExperiences([EMPTY_EXPERIENCE()]);
+      setEducation([EMPTY_EDUCATION()]);
+      setSkills('');
+      setLanguages([EMPTY_LANGUAGE()]);
+    };
+    window.addEventListener('cv-session-expired', onSessionExpired);
+    return () => window.removeEventListener('cv-session-expired', onSessionExpired);
+  }, []);
 
   const updateExperience = (id: string, field: keyof ExperienceEntry, value: string) => {
     setExperiences(prev => prev.map(e => e.id === id ? { ...e, [field]: value } : e));
@@ -89,7 +193,7 @@ export function StructuredInputPanel() {
     const expItems = experiences
       .filter(e => e.title || e.company)
       .map(e => {
-        let line = `${e.title}${e.company ? ' en ' + e.company : ''}${e.period ? ' (' + e.period + ')' : ''}`;
+        let line = `${e.title}${e.company ? ' | ' + e.company : ''}${e.period ? ' (' + e.period + ')' : ''}`;
         if (e.description) line += '\n' + e.description;
         return line;
       });
@@ -102,8 +206,12 @@ export function StructuredInputPanel() {
     if (eduItems.length) sections.push({ title: 'Educación', items: eduItems });
 
     // Skills
-    if (skills.trim()) {
-      sections.push({ title: 'Habilidades', items: [skills.trim()] });
+    const skillItems = skills
+      .split(/[,\n]/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (skillItems.length) {
+      sections.push({ title: 'Habilidades', items: skillItems });
     }
 
     // Languages
@@ -114,6 +222,9 @@ export function StructuredInputPanel() {
 
     const cvData: CvData = {
       name: profileName || '',
+      profession: profession.trim(),
+      photoUrl: photoUrl || undefined,
+      sectionLanguage,
       contactInfo,
       summary: summary.trim(),
       sections,
@@ -124,36 +235,84 @@ export function StructuredInputPanel() {
 
   const handleReset = () => {
     setContact({ ...EMPTY_CONTACT });
+    setProfession('');
+    setPhotoUrl('');
     setSummary('');
     setExperiences([EMPTY_EXPERIENCE()]);
     setEducation([EMPTY_EDUCATION()]);
     setSkills('');
     setLanguages([EMPTY_LANGUAGE()]);
     setProfileName('');
+    localStorage.removeItem(STRUCTURED_STORAGE_KEY);
     reset();
   };
 
-  const hasContent = profileName || summary || skills ||
+  const hasContent = profileName || profession || photoUrl || summary || skills ||
     experiences.some(e => e.title || e.company) ||
     education.some(e => e.degree || e.institution) ||
     languages.some(l => l.language) ||
     Object.values(contact).some(v => v);
 
+  const handlePhotoChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') setPhotoUrl(reader.result);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
   return (
     <div className="flex flex-col gap-3 h-full">
-      {/* Name */}
-      <div>
-        <label className="text-sm font-medium text-foreground mb-1 block">Nombre completo</label>
-        <Input
-          value={profileName}
-          onChange={(e) => setProfileName(e.target.value)}
-          placeholder="Ej: María García López"
-        />
+      {/* Identity */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+          <label className="text-sm font-medium text-foreground mb-1 block">Nombre completo</label>
+          <Input
+            value={profileName}
+            onChange={(e) => setProfileName(e.target.value)}
+            placeholder="Ej: María García López"
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium text-foreground mb-1 block">Profesión</label>
+          <Input
+            value={profession}
+            onChange={(e) => setProfession(e.target.value)}
+            placeholder="Ej: Finance Manager"
+          />
+        </div>
       </div>
 
-      {/* Scrollable sections */}
+      <div>
+        <label className="text-sm font-medium text-foreground mb-1 block">Fotografía (opcional)</label>
+        <div className="flex items-center gap-2">
+          <Input type="file" accept="image/*" onChange={handlePhotoChange} className="text-xs" />
+          {photoUrl && (
+            <Button type="button" variant="outline" size="sm" onClick={() => setPhotoUrl('')}>
+              Quitar
+            </Button>
+          )}
+        </div>
+        {photoUrl && (
+          <img
+            src={photoUrl}
+            alt="Foto de perfil"
+            className="mt-2 h-20 w-20 rounded-full border object-cover"
+          />
+        )}
+      </div>
+
+      {/* Scrollable sections + actions */}
       <div className="flex-1 overflow-auto min-h-0 -mx-1 px-1">
-        <Accordion type="multiple" defaultValue={["contact", "summary", "experience"]} className="w-full">
+        <Accordion
+          type="multiple"
+          defaultValue={["contact", "summary", "experience", "education", "skills", "languages"]}
+          className="w-full"
+        >
           {/* Contact */}
           <AccordionItem value="contact">
             <AccordionTrigger className="text-sm font-medium py-2">Información de contacto</AccordionTrigger>
@@ -198,7 +357,7 @@ export function StructuredInputPanel() {
                       <Input className="h-8 text-xs" placeholder="Cargo" value={exp.title} onChange={e => updateExperience(exp.id, 'title', e.target.value)} />
                       <Input className="h-8 text-xs" placeholder="Empresa" value={exp.company} onChange={e => updateExperience(exp.id, 'company', e.target.value)} />
                       <Input className="h-8 text-xs" placeholder="Periodo (ej: 2020 - Presente)" value={exp.period} onChange={e => updateExperience(exp.id, 'period', e.target.value)} />
-                      <Textarea className="min-h-[50px] resize-none text-xs" placeholder="Descripción de responsabilidades y logros..." value={exp.description} onChange={e => updateExperience(exp.id, 'description', e.target.value)} />
+                      <Textarea className="min-h-[100px] resize-none text-xs" placeholder="Descripción de responsabilidades y logros..." value={exp.description} onChange={e => updateExperience(exp.id, 'description', e.target.value)} />
                     </div>
                   </div>
                 ))}
@@ -241,9 +400,9 @@ export function StructuredInputPanel() {
             <AccordionContent>
               <Textarea
                 value={skills}
-                onChange={e => setSkills(e.target.value)}
-                placeholder="Separadas por comas: React, TypeScript, Node.js, AWS..."
-                className="min-h-[60px] resize-none text-xs"
+                onChange={e => setSkills(e.target.value.replace(/,\s*/g, '\n'))}
+                placeholder="Escribe skills separadas por coma: React, TypeScript, Node.js..."
+                className="min-h-[160px] resize-y text-xs"
               />
             </AccordionContent>
           </AccordionItem>
@@ -256,7 +415,18 @@ export function StructuredInputPanel() {
                 {languages.map((lang) => (
                   <div key={lang.id} className="flex gap-1.5 items-center">
                     <Input className="h-8 text-xs flex-1" placeholder="Idioma" value={lang.language} onChange={e => updateLanguage(lang.id, 'language', e.target.value)} />
-                    <Input className="h-8 text-xs w-24" placeholder="Nivel" value={lang.level} onChange={e => updateLanguage(lang.id, 'level', e.target.value)} />
+                    <Select value={lang.level || undefined} onValueChange={(value) => updateLanguage(lang.id, 'level', value)}>
+                      <SelectTrigger className="h-8 text-xs w-36">
+                        <SelectValue placeholder="Nivel" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Basic">Basic</SelectItem>
+                        <SelectItem value="Intermediate">Intermediate</SelectItem>
+                        <SelectItem value="Advance">Advance</SelectItem>
+                        <SelectItem value="Fluent">Fluent</SelectItem>
+                        <SelectItem value="Native">Native</SelectItem>
+                      </SelectContent>
+                    </Select>
                     {languages.length > 1 && (
                       <button onClick={() => setLanguages(prev => prev.filter(l => l.id !== lang.id))} className="text-muted-foreground hover:text-destructive">
                         <X className="h-3.5 w-3.5" />
@@ -271,24 +441,23 @@ export function StructuredInputPanel() {
             </AccordionContent>
           </AccordionItem>
         </Accordion>
-      </div>
 
-      {/* Actions */}
-      <div className="flex flex-col gap-2">
-        <Button onClick={handleGenerate} disabled={!hasContent || isGenerating} className="w-full">
-          <Sparkles className="h-4 w-4 mr-2" />
-          {isGenerating ? 'Generando...' : 'Generar 5 CVs'}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full"
-          onClick={handleReset}
-          disabled={!hasGenerated && !hasContent}
-        >
-          <RotateCcw className="h-3.5 w-3.5 mr-1" />
-          Reset
-        </Button>
+        <div className="mt-4 pb-6 flex flex-col gap-2">
+          <Button onClick={handleGenerate} disabled={!hasContent || isGenerating} className="w-full">
+            <Sparkles className="h-4 w-4 mr-2" />
+            {isGenerating ? 'Generando...' : 'Generar 5 CVs'}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={handleReset}
+            disabled={!hasGenerated && !hasContent}
+          >
+            <RotateCcw className="h-3.5 w-3.5 mr-1" />
+            Reset
+          </Button>
+        </div>
       </div>
     </div>
   );
