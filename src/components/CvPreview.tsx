@@ -4,7 +4,7 @@ import { TemplateRenderer } from './templates/TemplateRenderer';
 import { ExportButtons } from './ExportButtons';
 
 export function CvPreview() {
-  const { cvData, selectedTemplate, language, hasGenerated, isGenerating } = useCv();
+  const { cvData, selectedTemplate, hasGenerated, isGenerating } = useCv();
   const containerRef = useRef<HTMLDivElement>(null);
   const cvRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.5);
@@ -64,7 +64,6 @@ export function CvPreview() {
             ref={cvRef}
             data={cvData}
             template={selectedTemplate}
-            language={language}
           />
         </div>
       </div>

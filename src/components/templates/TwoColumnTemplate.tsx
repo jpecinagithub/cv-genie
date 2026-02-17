@@ -1,9 +1,8 @@
-import { CvData, Language } from '@/types/cv';
-import { translateSection } from '@/lib/translations';
+import { CvData } from '@/types/cv';
 
-interface Props { data: CvData; language: Language; }
+interface Props { data: CvData; }
 
-export function TwoColumnTemplate({ data, language }: Props) {
+export function TwoColumnTemplate({ data }: Props) {
   const sidebarTitles = ['Habilidades', 'Idiomas', 'Certificaciones', 'Intereses'];
   const sidebar = data.sections.filter(s => sidebarTitles.includes(s.title));
   const main = data.sections.filter(s => !sidebarTitles.includes(s.title));
@@ -27,7 +26,7 @@ export function TwoColumnTemplate({ data, language }: Props) {
         {sidebar.map((section, i) => (
           <div key={i} style={{ marginTop: '6mm' }}>
             <h3 style={{ fontSize: '10pt', fontWeight: 700, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '2mm', borderBottom: '1px solid #334155', paddingBottom: '1mm' }}>
-              {translateSection(section.title, language)}
+              {section.title}
             </h3>
             {section.items.map((item, j) => (
               <p key={j} style={{ fontSize: '9pt', margin: '1mm 0', color: '#cbd5e1' }}>
@@ -42,7 +41,7 @@ export function TwoColumnTemplate({ data, language }: Props) {
         {data.summary && (
           <div style={{ marginBottom: '6mm' }}>
             <h2 style={{ fontSize: '11pt', fontWeight: 700, color: '#1e293b', textTransform: 'uppercase', letterSpacing: '1px', borderBottom: '2px solid #1e293b', paddingBottom: '1mm', marginBottom: '2mm' }}>
-              {translateSection('Resumen', language)}
+              Resumen
             </h2>
             <p style={{ color: '#475569', fontSize: '10pt' }}>{data.summary}</p>
           </div>
@@ -50,7 +49,7 @@ export function TwoColumnTemplate({ data, language }: Props) {
         {main.map((section, i) => (
           <div key={i} style={{ marginBottom: '5mm' }}>
             <h2 style={{ fontSize: '11pt', fontWeight: 700, color: '#1e293b', textTransform: 'uppercase', letterSpacing: '1px', borderBottom: '2px solid #1e293b', paddingBottom: '1mm', marginBottom: '2mm' }}>
-              {translateSection(section.title, language)}
+              {section.title}
             </h2>
             {section.items.map((item, j) => {
               const isSubItem = item.startsWith('  ') || item.startsWith('\t');

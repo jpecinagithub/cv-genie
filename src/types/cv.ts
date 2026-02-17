@@ -27,4 +27,4 @@ export const TEMPLATES: TemplateInfo[] = [
   { id: 'compact', nameES: 'Compacto', nameEN: 'Compact', description: 'Denso y profesional' },
 ];
 
-export type Language = 'es' | 'en';
+

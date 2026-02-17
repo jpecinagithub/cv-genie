@@ -1,9 +1,8 @@
-import { CvData, Language } from '@/types/cv';
-import { translateSection } from '@/lib/translations';
+import { CvData } from '@/types/cv';
 
-interface Props { data: CvData; language: Language; }
+interface Props { data: CvData; }
 
-export function CompactTemplate({ data, language }: Props) {
+export function CompactTemplate({ data }: Props) {
   return (
     <div style={{
       width: '210mm', minHeight: '297mm', padding: '15mm 18mm',
@@ -38,7 +37,7 @@ export function CompactTemplate({ data, language }: Props) {
             borderBottom: '1px solid #dbeafe', paddingBottom: '0.5mm',
             marginBottom: '1.5mm', textTransform: 'uppercase', letterSpacing: '0.5px',
           }}>
-            {translateSection(section.title, language)}
+            {section.title}
           </h2>
           {section.items.map((item, j) => {
             const isSubItem = item.startsWith('  ') || item.startsWith('\t');

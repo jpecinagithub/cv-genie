@@ -1,9 +1,8 @@
-import { CvData, Language } from '@/types/cv';
-import { translateSection } from '@/lib/translations';
+import { CvData } from '@/types/cv';
 
-interface Props { data: CvData; language: Language; }
+interface Props { data: CvData; }
 
-export function ModernHeaderTemplate({ data, language }: Props) {
+export function ModernHeaderTemplate({ data }: Props) {
   return (
     <div style={{
       width: '210mm', minHeight: '297mm', background: 'white',
@@ -37,7 +36,7 @@ export function ModernHeaderTemplate({ data, language }: Props) {
               borderBottom: '2px solid #0f766e', paddingBottom: '1.5mm',
               marginBottom: '3mm', textTransform: 'uppercase', letterSpacing: '1px',
             }}>
-              {translateSection(section.title, language)}
+              {section.title}
             </h2>
             {section.items.map((item, j) => {
               const isSubItem = item.startsWith('  ') || item.startsWith('\t');

@@ -8,7 +8,7 @@ import { RotateCcw, Sparkles, FileText } from 'lucide-react';
 export function InputPanel() {
   const {
     rawText, setRawText, profileName, setProfileName,
-    language, setLanguage, generate, reset, isGenerating, hasGenerated,
+    generate, reset, isGenerating, hasGenerated,
   } = useCv();
 
   return (
@@ -22,26 +22,6 @@ export function InputPanel() {
           onChange={(e) => setProfileName(e.target.value)}
           placeholder="Ej: María García López"
         />
-      </div>
-
-      <div>
-        <label className="text-sm font-medium text-foreground mb-1.5 block">Idioma de secciones</label>
-        <div className="flex gap-2">
-          <Button
-            variant={language === 'es' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setLanguage('es')}
-          >
-            ES
-          </Button>
-          <Button
-            variant={language === 'en' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setLanguage('en')}
-          >
-            EN
-          </Button>
-        </div>
       </div>
 
       <div className="flex-1 flex flex-col min-h-0">
