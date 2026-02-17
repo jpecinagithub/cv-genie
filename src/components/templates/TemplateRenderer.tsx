@@ -8,6 +8,9 @@ import { TwoColumnBurgundyTemplate } from './TwoColumnBurgundyTemplate';
 import { ModernHeaderTemplate } from './ModernHeaderTemplate';
 import { ExecutiveTemplate } from './ExecutiveTemplate';
 import { CompactTemplate } from './CompactTemplate';
+import { AuroraBandTemplate } from './AuroraBandTemplate';
+import { LedgerLinesTemplate } from './LedgerLinesTemplate';
+import { RetroGridTemplate } from './RetroGridTemplate';
 
 interface Props {
   data: CvData;
@@ -23,6 +26,9 @@ const TEMPLATE_MAP: Record<TemplateName, React.ComponentType<{ data: CvData }>> 
   'modern-header': ModernHeaderTemplate,
   'executive': ExecutiveTemplate,
   'compact': CompactTemplate,
+  'aurora-band': AuroraBandTemplate,
+  'ledger-lines': LedgerLinesTemplate,
+  'retro-grid': RetroGridTemplate,
 };
 
 export const TemplateRenderer = forwardRef<HTMLDivElement, Props>(

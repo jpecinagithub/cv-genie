@@ -39,7 +39,10 @@ export type TemplateName =
   | 'two-column-burgundy'
   | 'modern-header'
   | 'executive'
-  | 'compact';
+  | 'compact'
+  | 'aurora-band'
+  | 'ledger-lines'
+  | 'retro-grid';
 
 export interface TemplateInfo {
   id: TemplateName;
@@ -57,6 +60,9 @@ export const TEMPLATES: TemplateInfo[] = [
   { id: 'modern-header', nameES: 'Cabecera Moderna', nameEN: 'Modern Header', description: 'Header con color' },
   { id: 'executive', nameES: 'Ejecutivo', nameEN: 'Executive', description: 'Formal y elegante' },
   { id: 'compact', nameES: 'Compacto', nameEN: 'Compact', description: 'Denso y profesional' },
+  { id: 'aurora-band', nameES: 'Aurora Band', nameEN: 'Aurora Band', description: 'Franja de color y bloques modernos' },
+  { id: 'ledger-lines', nameES: 'Ledger Lines', nameEN: 'Ledger Lines', description: 'Editorial con lineas y timeline' },
+  { id: 'retro-grid', nameES: 'Retro Grid', nameEN: 'Retro Grid', description: 'Tecnico mono con rejilla' },
 ];
 
 
