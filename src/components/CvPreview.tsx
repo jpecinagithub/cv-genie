@@ -14,7 +14,10 @@ export function CvPreview() {
     if (!container) return;
     const updateScale = () => {
       const width = container.clientWidth;
-      setScale(Math.min((width - 40) / 794, 1));
+      const height = container.clientHeight;
+      const scaleX = (width - 48) / 794;
+      const scaleY = (height - 48) / 1123;
+      setScale(Math.min(scaleX, scaleY, 1));
     };
     updateScale();
     const observer = new ResizeObserver(updateScale);
