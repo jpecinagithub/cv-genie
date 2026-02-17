@@ -4,7 +4,7 @@ import { TemplateRenderer } from './templates/TemplateRenderer';
 import { ExportButtons } from './ExportButtons';
 
 export function CvPreview() {
-  const { cvData, selectedTemplate, hasGenerated, isGenerating } = useCv();
+  const { cvData, selectedTemplate, hasGenerated } = useCv();
   const containerRef = useRef<HTMLDivElement>(null);
   const cvRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.5);
@@ -25,17 +25,6 @@ export function CvPreview() {
     return () => observer.disconnect();
   }, []);
 
-  if (isGenerating) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4" />
-          <p className="text-muted-foreground">Generando tus 5 CVs...</p>
-        </div>
-      </div>
-    );
-  }
-
   if (!hasGenerated || !cvData) {
     return (
       <div className="flex items-center justify-center h-full text-center p-8">
@@ -43,8 +32,8 @@ export function CvPreview() {
           <div className="text-6xl mb-4">📄</div>
           <h2 className="text-xl font-semibold text-foreground mb-2">Vista previa del CV</h2>
           <p className="text-muted-foreground max-w-md">
-            Pega tu información profesional en el panel izquierdo y haz clic en
-            &quot;Generar 5 CVs&quot; para ver los resultados aquí.
+            Completa el formulario del panel izquierdo y haz clic en
+            &quot;Generar 5 CVs&quot; para ver el resultado aquí.
           </p>
         </div>
       </div>

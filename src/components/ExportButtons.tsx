@@ -4,6 +4,7 @@ import { useCv } from '@/context/CvContext';
 import { exportToPdf } from '@/lib/export-pdf';
 import { exportToDocx } from '@/lib/export-docx';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TEMPLATES } from '@/types/cv';
 import { FileText, FileDown, Printer, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -13,10 +14,16 @@ interface Props {
 }
 
 export function ExportButtons({ cvRef }: Props) {
-  const { cvData, selectedTemplate, profileName } = useCv();
+  const {
+    cvData,
+    selectedTemplate,
+    setSelectedTemplate,
+    sectionLanguage,
+    setSectionLanguage,
+    profileName,
+  } = useCv();
   const [exporting, setExporting] = useState<string | null>(null);
 
-  const templateName = TEMPLATES.find(t => t.id === selectedTemplate)?.nameES || selectedTemplate;
   const baseName = (profileName || cvData?.name || 'cv').replace(/\s+/g, '_');
   const filename = `${baseName}_${selectedTemplate}`;
 
@@ -53,8 +60,28 @@ export function ExportButtons({ cvRef }: Props) {
   };
 
   return (
-    <div className="flex items-center gap-2 p-3 border-b bg-card">
-      <span className="text-sm font-medium text-muted-foreground mr-auto">{templateName}</span>
+    <div className="flex flex-wrap items-center gap-2 p-3 border-b bg-card">
+      <Select value={selectedTemplate} onValueChange={(value) => setSelectedTemplate(value as typeof selectedTemplate)}>
+        <SelectTrigger className="h-9 w-[170px]">
+          <SelectValue placeholder="Plantilla" />
+        </SelectTrigger>
+        <SelectContent>
+          {TEMPLATES.map((template) => (
+            <SelectItem key={template.id} value={template.id}>
+              {template.nameES}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select value={sectionLanguage} onValueChange={(value) => setSectionLanguage(value as 'es' | 'en')}>
+        <SelectTrigger className="h-9 w-[170px]">
+          <SelectValue placeholder="Idioma" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="es">Titulos en Espanol</SelectItem>
+          <SelectItem value="en">Titles in English</SelectItem>
+        </SelectContent>
+      </Select>
       <Button variant="outline" size="sm" onClick={handlePdf} disabled={!!exporting}>
         {exporting === 'pdf' ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <FileText className="h-4 w-4 mr-1" />}
         PDF

@@ -117,7 +117,7 @@ function optimizeImageDataUrl(dataUrl: string): Promise<string> {
 }
 
 export function StructuredInputPanel() {
-  const { reset, isGenerating, hasGenerated, profileName, setProfileName, setCvDataDirectly, sectionLanguage } = useCv();
+  const { reset, hasGenerated, profileName, setProfileName, setCvDataDirectly, sectionLanguage } = useCv();
   const initialState = useMemo(() => readStructuredState(), []);
   const storageWarningShownRef = useRef(false);
 
@@ -291,7 +291,7 @@ export function StructuredInputPanel() {
   };
 
   return (
-    <div className="flex flex-col gap-3 h-full">
+    <div className="flex flex-col gap-3">
       {/* Identity */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
@@ -331,8 +331,8 @@ export function StructuredInputPanel() {
         )}
       </div>
 
-      {/* Scrollable sections + actions */}
-      <div className="flex-1 overflow-auto min-h-0 -mx-1 px-1">
+      {/* Sections + actions */}
+      <div className="-mx-1 px-1">
         <Accordion
           type="multiple"
           defaultValue={["contact", "summary", "experience", "education", "skills", "languages"]}
@@ -342,7 +342,7 @@ export function StructuredInputPanel() {
           <AccordionItem value="contact">
             <AccordionTrigger className="text-sm font-medium py-2">Información de contacto</AccordionTrigger>
             <AccordionContent>
-              <div className="grid grid-cols-1 gap-2">
+              <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                 <Input placeholder="Email" value={contact.email} onChange={e => setContact(c => ({ ...c, email: e.target.value }))} />
                 <Input placeholder="Teléfono" value={contact.phone} onChange={e => setContact(c => ({ ...c, phone: e.target.value }))} />
                 <Input placeholder="LinkedIn" value={contact.linkedin} onChange={e => setContact(c => ({ ...c, linkedin: e.target.value }))} />
@@ -378,11 +378,11 @@ export function StructuredInputPanel() {
                         <X className="h-3.5 w-3.5" />
                       </button>
                     )}
-                    <div className="grid grid-cols-1 gap-1.5">
-                      <Input className="h-8 text-xs" placeholder="Cargo" value={exp.title} onChange={e => updateExperience(exp.id, 'title', e.target.value)} />
-                      <Input className="h-8 text-xs" placeholder="Empresa" value={exp.company} onChange={e => updateExperience(exp.id, 'company', e.target.value)} />
+                    <div className="grid grid-cols-1 gap-1.5 md:grid-cols-2">
+                      <Input className="h-8 text-xs md:col-span-1" placeholder="Cargo" value={exp.title} onChange={e => updateExperience(exp.id, 'title', e.target.value)} />
+                      <Input className="h-8 text-xs md:col-span-1" placeholder="Empresa" value={exp.company} onChange={e => updateExperience(exp.id, 'company', e.target.value)} />
                       <Input className="h-8 text-xs" placeholder="Periodo (ej: 2020 - Presente)" value={exp.period} onChange={e => updateExperience(exp.id, 'period', e.target.value)} />
-                      <Textarea className="min-h-[100px] resize-none text-xs" placeholder="Descripción de responsabilidades y logros..." value={exp.description} onChange={e => updateExperience(exp.id, 'description', e.target.value)} />
+                      <Textarea className="min-h-[100px] resize-none text-xs md:col-span-2" placeholder="Descripción de responsabilidades y logros..." value={exp.description} onChange={e => updateExperience(exp.id, 'description', e.target.value)} />
                     </div>
                   </div>
                 ))}
@@ -405,10 +405,10 @@ export function StructuredInputPanel() {
                         <X className="h-3.5 w-3.5" />
                       </button>
                     )}
-                    <div className="grid grid-cols-1 gap-1.5">
-                      <Input className="h-8 text-xs" placeholder="Título / Grado" value={edu.degree} onChange={e => updateEducation(edu.id, 'degree', e.target.value)} />
-                      <Input className="h-8 text-xs" placeholder="Institución" value={edu.institution} onChange={e => updateEducation(edu.id, 'institution', e.target.value)} />
-                      <Input className="h-8 text-xs" placeholder="Año" value={edu.year} onChange={e => updateEducation(edu.id, 'year', e.target.value)} />
+                    <div className="grid grid-cols-1 gap-1.5 md:grid-cols-3">
+                      <Input className="h-8 text-xs md:col-span-1" placeholder="Título / Grado" value={edu.degree} onChange={e => updateEducation(edu.id, 'degree', e.target.value)} />
+                      <Input className="h-8 text-xs md:col-span-1" placeholder="Institución" value={edu.institution} onChange={e => updateEducation(edu.id, 'institution', e.target.value)} />
+                      <Input className="h-8 text-xs md:col-span-1" placeholder="Año" value={edu.year} onChange={e => updateEducation(edu.id, 'year', e.target.value)} />
                     </div>
                   </div>
                 ))}
@@ -467,10 +467,10 @@ export function StructuredInputPanel() {
           </AccordionItem>
         </Accordion>
 
-        <div className="mt-4 pb-6 flex flex-col gap-2">
-          <Button onClick={handleGenerate} disabled={!hasContent || isGenerating} className="w-full">
+        <div className="mt-4 pb-1 pt-2 flex flex-col gap-2 border-t">
+          <Button onClick={handleGenerate} disabled={!hasContent} className="w-full">
             <Sparkles className="h-4 w-4 mr-2" />
-            {isGenerating ? 'Generando...' : 'Generar 5 CVs'}
+            Generar 5 CVs
           </Button>
           <Button
             variant="outline"

@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { CvData, TemplateName } from '@/types/cv';
-import { parseText } from '@/lib/parser';
 import { toast } from 'sonner';
 /* eslint-disable react-refresh/only-export-components */
 
@@ -24,16 +23,12 @@ function safeRemoveItem(key: string) {
 }
 
 interface CvContextType {
-  rawText: string;
-  setRawText: (text: string) => void;
   cvData: CvData | null;
   setCvDataDirectly: (data: CvData) => void;
   selectedTemplate: TemplateName;
   setSelectedTemplate: (t: TemplateName) => void;
   profileName: string;
   setProfileName: (n: string) => void;
-  isGenerating: boolean;
-  generate: () => void;
   reset: () => void;
   hasGenerated: boolean;
   sessionExpiresAt: number | null;
@@ -45,7 +40,6 @@ interface CvContextType {
 const CvContext = createContext<CvContextType | null>(null);
 
 export function CvProvider({ children }: { children: ReactNode }) {
-  const [rawText, setRawText] = useState(() => localStorage.getItem('cv-raw-text') || '');
   const [cvData, setCvData] = useState<CvData | null>(() => {
     const saved = localStorage.getItem('cv-data');
     return saved ? JSON.parse(saved) : null;
@@ -57,7 +51,6 @@ export function CvProvider({ children }: { children: ReactNode }) {
   const [sectionLanguage, setSectionLanguage] = useState<'es' | 'en'>(
     () => (localStorage.getItem('cv-section-language') as 'es' | 'en') || 'es'
   );
-  const [isGenerating, setIsGenerating] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(() => !!localStorage.getItem('cv-data'));
   const [sessionExpiresAt, setSessionExpiresAt] = useState<number | null>(() => {
     const saved = localStorage.getItem(SESSION_KEY);
@@ -72,7 +65,6 @@ export function CvProvider({ children }: { children: ReactNode }) {
   };
 
   const clearAllState = () => {
-    setRawText('');
     setCvData(null);
     setProfileName('');
     setSectionLanguage('es');
@@ -87,7 +79,6 @@ export function CvProvider({ children }: { children: ReactNode }) {
     safeSetItem(SESSION_KEY, String(expiresAt));
   }, []);
 
-  useEffect(() => { safeSetItem('cv-raw-text', rawText); }, [rawText]);
   useEffect(() => { safeSetItem('cv-template', selectedTemplate); }, [selectedTemplate]);
   useEffect(() => { safeSetItem('cv-profile', profileName); }, [profileName]);
   useEffect(() => { safeSetItem('cv-section-language', sectionLanguage); }, [sectionLanguage]);
@@ -148,19 +139,6 @@ export function CvProvider({ children }: { children: ReactNode }) {
     };
   }, [sessionExpiresAt]);
 
-  const generate = () => {
-    if (!rawText.trim()) return;
-    setIsGenerating(true);
-    setTimeout(() => {
-      const data = parseText(rawText);
-      if (profileName && profileName.trim()) data.name = profileName;
-      data.sectionLanguage = sectionLanguage;
-      setCvData(data);
-      setHasGenerated(true);
-      setIsGenerating(false);
-    }, 400);
-  };
-
   const setCvDataDirectly = (data: CvData) => {
     setCvData({ ...data, sectionLanguage: data.sectionLanguage || sectionLanguage });
     setHasGenerated(true);
@@ -173,9 +151,9 @@ export function CvProvider({ children }: { children: ReactNode }) {
 
   return (
     <CvContext.Provider value={{
-      rawText, setRawText, cvData, setCvDataDirectly, selectedTemplate, setSelectedTemplate,
+      cvData, setCvDataDirectly, selectedTemplate, setSelectedTemplate,
       profileName, setProfileName, sectionLanguage, setSectionLanguage,
-      isGenerating, generate, reset, hasGenerated, sessionExpiresAt, startSession,
+      reset, hasGenerated, sessionExpiresAt, startSession,
     }}>
       {children}
     </CvContext.Provider>

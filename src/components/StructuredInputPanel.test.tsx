@@ -8,7 +8,6 @@ const mockReset = vi.fn();
 
 const mockCtx = {
   reset: mockReset,
-  isGenerating: false,
   hasGenerated: false,
   profileName: "Jane Doe",
   setProfileName: mockSetProfileName,
@@ -57,4 +56,3 @@ describe("StructuredInputPanel", () => {
     expect(payload.sections[0].items[0]).toContain("Finance Manager | ACME (2020 - Present)");
   });
 });
-

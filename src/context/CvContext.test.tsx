@@ -21,21 +21,17 @@ function TestConsumer() {
       <button onClick={() => cv.setSectionLanguage("en")}>set-en</button>
       <button
         onClick={() =>
-          cv.setRawText(
-            [
-              "Jane Doe",
-              "jane@example.com",
-              "Summary",
-              "Senior profile",
-              "Experience",
-              "Finance Manager | ACME (2020 - Present)",
-            ].join("\n"),
-          )
+          cv.setCvDataDirectly({
+            name: "Jane Doe",
+            contactInfo: ["jane@example.com"],
+            summary: "Senior profile",
+            sections: [{ key: "experience", title: "Experiencia", items: ["Finance Manager | ACME"] }],
+            sectionLanguage: cv.sectionLanguage,
+          })
         }
       >
-        set-raw
+        set-data
       </button>
-      <button onClick={cv.generate}>generate</button>
       <button onClick={cv.startSession}>start-session</button>
       <pre data-testid="cv-data">{JSON.stringify(cv.cvData)}</pre>
     </div>
@@ -50,7 +46,7 @@ describe("CvContext", () => {
     toastMocks.error.mockReset();
   });
 
-  it("generates cvData with selected section language", () => {
+  it("stores cvData with selected section language", () => {
     render(
       <CvProvider>
         <TestConsumer />
@@ -58,12 +54,7 @@ describe("CvContext", () => {
     );
 
     fireEvent.click(screen.getByText("set-en"));
-    fireEvent.click(screen.getByText("set-raw"));
-    fireEvent.click(screen.getByText("generate"));
-
-    act(() => {
-      vi.advanceTimersByTime(450);
-    });
+    fireEvent.click(screen.getByText("set-data"));
 
     const dataText = screen.getByTestId("cv-data").textContent ?? "null";
     const data = JSON.parse(dataText);

@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import { StructuredInputPanel } from '@/components/StructuredInputPanel';
 import { CvPreview } from '@/components/CvPreview';
-import { NavLink } from '@/components/NavLink';
-import { TemplateSelect } from '@/components/TemplateSelect';
 import { useCv } from '@/context/CvContext';
 
 const SESSION_DURATION_MS = 30 * 60 * 1000;
@@ -36,11 +34,15 @@ const FormPage = () => {
   const isWarning = remainingMs <= 5 * 60 * 1000;
 
   return (
-    <div className="flex h-screen flex-col bg-background md:flex-row">
-      <aside className="w-full border-r bg-card flex flex-col overflow-hidden md:w-1/2">
-        <div className="p-4 border-b">
-          <h1 className="text-lg font-bold text-foreground tracking-tight">CV Generator</h1>
-          <p className="text-xs text-muted-foreground">Completa el formulario para crear tu CV</p>
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto w-full max-w-[1680px] px-3 py-3 md:px-5 md:py-4">
+        <div className="rounded-lg border bg-card p-4">
+          <div className="flex items-center gap-2">
+            <div>
+              <h1 className="text-lg font-bold text-foreground tracking-tight">CV Generator</h1>
+              <p className="text-xs text-muted-foreground">Completa el formulario para crear tu CV</p>
+            </div>
+          </div>
           <div className={`mt-2 inline-flex items-center rounded-md border px-2 py-1 text-xs ${
             isWarning
               ? 'border-destructive/40 bg-destructive/10 text-destructive'
@@ -49,30 +51,16 @@ const FormPage = () => {
             Sesion activa: <span className="ml-1 font-mono font-semibold">{minutes}:{seconds}</span>
           </div>
         </div>
-        <div className="px-4 pt-3">
-          <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-md border border-primary bg-primary/5 px-2 py-1.5 text-center text-xs font-medium text-foreground">
-              Formulario
-            </div>
-            <NavLink
-              to="/"
-              className="rounded-md border px-2 py-1.5 text-center text-xs font-medium text-foreground hover:bg-muted"
-            >
-              Texto libre
-            </NavLink>
-          </div>
-          <div className="mt-2 md:w-1/2">
-            <TemplateSelect />
-          </div>
-        </div>
-        <div className="flex-1 overflow-auto p-4 min-h-0 mt-0">
-          <StructuredInputPanel />
-        </div>
-      </aside>
 
-      <main className="flex-1 overflow-hidden md:w-1/2">
-        <CvPreview />
-      </main>
+        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+          <main className="min-w-0 rounded-lg border bg-card p-4">
+            <StructuredInputPanel />
+          </main>
+          <aside className="min-w-0 rounded-lg border bg-card p-2">
+            <CvPreview />
+          </aside>
+        </div>
+      </div>
     </div>
   );
 };
