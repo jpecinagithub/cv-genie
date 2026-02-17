@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { CvData, TemplateName, Language } from '@/types/cv';
+import { CvData, TemplateName } from '@/types/cv';
 import { parseText } from '@/lib/parser';
 
 interface CvContextType {
@@ -8,8 +8,6 @@ interface CvContextType {
   cvData: CvData | null;
   selectedTemplate: TemplateName;
   setSelectedTemplate: (t: TemplateName) => void;
-  language: Language;
-  setLanguage: (l: Language) => void;
   profileName: string;
   setProfileName: (n: string) => void;
   isGenerating: boolean;
@@ -29,16 +27,12 @@ export function CvProvider({ children }: { children: ReactNode }) {
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateName>(
     () => (localStorage.getItem('cv-template') as TemplateName) || 'minimal'
   );
-  const [language, setLanguage] = useState<Language>(
-    () => (localStorage.getItem('cv-language') as Language) || 'es'
-  );
   const [profileName, setProfileName] = useState(() => localStorage.getItem('cv-profile') || '');
   const [isGenerating, setIsGenerating] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(() => !!localStorage.getItem('cv-data'));
 
   useEffect(() => { localStorage.setItem('cv-raw-text', rawText); }, [rawText]);
   useEffect(() => { localStorage.setItem('cv-template', selectedTemplate); }, [selectedTemplate]);
-  useEffect(() => { localStorage.setItem('cv-language', language); }, [language]);
   useEffect(() => { localStorage.setItem('cv-profile', profileName); }, [profileName]);
   useEffect(() => {
     if (cvData) localStorage.setItem('cv-data', JSON.stringify(cvData));
@@ -70,7 +64,7 @@ export function CvProvider({ children }: { children: ReactNode }) {
   return (
     <CvContext.Provider value={{
       rawText, setRawText, cvData, selectedTemplate, setSelectedTemplate,
-      language, setLanguage, profileName, setProfileName,
+      profileName, setProfileName,
       isGenerating, generate, reset, hasGenerated,
     }}>
       {children}

@@ -1,9 +1,8 @@
-import { CvData, Language } from '@/types/cv';
-import { translateSection } from '@/lib/translations';
+import { CvData } from '@/types/cv';
 
-interface Props { data: CvData; language: Language; }
+interface Props { data: CvData; }
 
-export function ExecutiveTemplate({ data, language }: Props) {
+export function ExecutiveTemplate({ data }: Props) {
   return (
     <div style={{
       width: '210mm', minHeight: '297mm', padding: '25mm 28mm',
@@ -36,7 +35,7 @@ export function ExecutiveTemplate({ data, language }: Props) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '3mm', marginBottom: '3mm' }}>
             <div style={{ flex: 1, height: '0.3mm', background: '#92764a' }} />
             <h2 style={{ fontSize: '12pt', fontWeight: 600, color: '#1a1a1a', textTransform: 'uppercase', letterSpacing: '2px', whiteSpace: 'nowrap' }}>
-              {translateSection(section.title, language)}
+              {section.title}
             </h2>
             <div style={{ flex: 1, height: '0.3mm', background: '#92764a' }} />
           </div>
