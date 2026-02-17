@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { StructuredInputPanel } from '@/components/StructuredInputPanel';
 import { CvPreview } from '@/components/CvPreview';
 import { useCv } from '@/context/CvContext';
+import { FileText, Bell } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const SESSION_DURATION_MS = 30 * 60 * 1000;
 
@@ -34,34 +36,68 @@ const FormPage = () => {
   const isWarning = remainingMs <= 5 * 60 * 1000;
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="mx-auto w-full max-w-[1680px] px-3 py-3 md:px-5 md:py-4">
-        <div className="rounded-lg border bg-card p-4">
-          <div className="flex items-center gap-2">
+    <div className="min-h-screen bg-[#f5f7f8] text-slate-900">
+      <header className="sticky top-0 z-50 h-16 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <div className="mx-auto flex h-full w-full max-w-[1920px] items-center justify-between px-4 md:px-6">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-[#0056b2] p-1.5 text-white">
+              <FileText className="h-5 w-5" />
+            </div>
             <div>
-              <h1 className="text-lg font-bold text-foreground tracking-tight">CV Generator</h1>
-              <p className="text-xs text-muted-foreground">Completa el formulario para crear tu CV</p>
+              <h1 className="text-xl font-bold tracking-tight">
+                CV<span className="font-black text-[#0056b2]">Craft</span>
+              </h1>
+              <p className="text-[11px] text-slate-500">Professional CV Builder</p>
             </div>
           </div>
-          <div className={`mt-2 inline-flex items-center rounded-md border px-2 py-1 text-xs ${
-            isWarning
-              ? 'border-destructive/40 bg-destructive/10 text-destructive'
-              : 'bg-muted/40'
-          }`}>
-            Sesion activa: <span className="ml-1 font-mono font-semibold">{minutes}:{seconds}</span>
+          <div className="flex items-center gap-3">
+            <div className={`inline-flex items-center rounded-md border px-2.5 py-1 text-xs ${
+              isWarning
+                ? 'border-red-300 bg-red-50 text-red-700'
+                : 'border-slate-200 bg-slate-50 text-slate-700'
+            }`}>
+              Sesion activa: <span className="ml-1 font-mono font-semibold">{minutes}:{seconds}</span>
+            </div>
+            <button
+              type="button"
+              className="rounded-full p-2 text-slate-500 transition-colors hover:bg-slate-100"
+              aria-label="Notificaciones"
+            >
+              <Bell className="h-5 w-5" />
+            </button>
           </div>
         </div>
+      </header>
 
-        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-          <main className="min-w-0 rounded-lg border bg-card p-4">
+      <main className="mx-auto grid h-[calc(100vh-4rem)] w-full max-w-[1920px] grid-cols-1 md:grid-cols-2">
+        <section className="custom-scrollbar overflow-y-auto border-r border-slate-200 bg-white">
+          <div className="mx-auto w-full max-w-3xl px-6 py-8">
+            <div className="mb-8">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-900">Build your professional CV</h2>
+                  <p className="mt-1 text-sm text-slate-500">Fill in the sections below to update your live preview.</p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-9 border-[#0056b2]/40 bg-[#0056b2]/5 text-[#0056b2] hover:bg-[#0056b2]/10"
+                  onClick={() => window.dispatchEvent(new Event('cv-import-model'))}
+                >
+                  Importar modelo
+                </Button>
+              </div>
+            </div>
             <StructuredInputPanel />
-          </main>
-          <aside className="min-w-0 rounded-lg border bg-card p-2">
+          </div>
+        </section>
+        <section className="overflow-hidden bg-gradient-to-b from-[#f4f7fb] to-[#eef3f7]">
+          <div className="h-full p-4 md:p-6">
             <CvPreview />
-          </aside>
-        </div>
-      </div>
-    </div>
+          </div>
+        </section>
+      </main>
+   </div>
   );
 };
 

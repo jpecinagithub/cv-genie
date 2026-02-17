@@ -60,9 +60,9 @@ export function ExportButtons({ cvRef }: Props) {
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-2 p-3 border-b bg-card">
+    <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white/90 p-3 shadow-sm backdrop-blur">
       <Select value={selectedTemplate} onValueChange={(value) => setSelectedTemplate(value as typeof selectedTemplate)}>
-        <SelectTrigger className="h-9 w-[170px]">
+        <SelectTrigger className="h-9 w-[180px] border-slate-300 bg-white text-xs font-semibold">
           <SelectValue placeholder="Plantilla" />
         </SelectTrigger>
         <SelectContent>
@@ -74,7 +74,7 @@ export function ExportButtons({ cvRef }: Props) {
         </SelectContent>
       </Select>
       <Select value={sectionLanguage} onValueChange={(value) => setSectionLanguage(value as 'es' | 'en')}>
-        <SelectTrigger className="h-9 w-[170px]">
+        <SelectTrigger className="h-9 w-[170px] border-slate-300 bg-white text-xs font-semibold">
           <SelectValue placeholder="Idioma" />
         </SelectTrigger>
         <SelectContent>
@@ -82,15 +82,15 @@ export function ExportButtons({ cvRef }: Props) {
           <SelectItem value="en">Titles in English</SelectItem>
         </SelectContent>
       </Select>
-      <Button variant="outline" size="sm" onClick={handlePdf} disabled={!!exporting}>
+      <Button variant="outline" size="sm" className="h-9 border-slate-300 bg-white font-semibold" onClick={handlePdf} disabled={!!exporting}>
         {exporting === 'pdf' ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <FileText className="h-4 w-4 mr-1" />}
         PDF
       </Button>
-      <Button variant="outline" size="sm" onClick={handleDocx} disabled={!!exporting}>
+      <Button variant="outline" size="sm" className="h-9 border-slate-300 bg-white font-semibold" onClick={handleDocx} disabled={!!exporting}>
         {exporting === 'docx' ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <FileDown className="h-4 w-4 mr-1" />}
         DOCX
       </Button>
-      <Button variant="outline" size="sm" onClick={() => handlePrint()} disabled={!!exporting}>
+      <Button variant="outline" size="sm" className="h-9 border-slate-300 bg-white font-semibold" onClick={() => handlePrint()} disabled={!!exporting}>
         <Printer className="h-4 w-4 mr-1" /> Imprimir
       </Button>
     </div>
