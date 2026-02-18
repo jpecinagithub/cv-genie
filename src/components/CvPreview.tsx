@@ -7,11 +7,14 @@ export function CvPreview() {
   const { cvData, selectedTemplate, hasGenerated } = useCv();
   const containerRef = useRef<HTMLDivElement>(null);
   const cvRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(0.5);
+  const [scale, setScale] = useState(1);
 
   useEffect(() => {
+    if (!hasGenerated || !cvData) return;
+
     const container = containerRef.current;
     if (!container) return;
+
     const updateScale = () => {
       const width = container.clientWidth;
       const height = container.clientHeight;
@@ -19,11 +22,16 @@ export function CvPreview() {
       const scaleY = (height - 48) / 1123;
       setScale(Math.min(scaleX, scaleY, 1));
     };
+
+    const frameId = requestAnimationFrame(updateScale);
     updateScale();
     const observer = new ResizeObserver(updateScale);
     observer.observe(container);
-    return () => observer.disconnect();
-  }, []);
+    return () => {
+      cancelAnimationFrame(frameId);
+      observer.disconnect();
+    };
+  }, [hasGenerated, cvData]);
 
   if (!hasGenerated || !cvData) {
     return (
